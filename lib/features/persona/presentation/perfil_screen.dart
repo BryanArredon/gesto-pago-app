@@ -273,21 +273,26 @@ class _TarjetaSeccion extends StatelessWidget {
         borderRadius: BorderRadius.circular(GpRadii.tarjeta),
         border: Border.all(color: scheme.outline),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (title != null) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Text(
-                title!,
-                style: Theme.of(context).textTheme.titleMedium,
+      child: Material(
+        color: Colors.transparent,
+        clipBehavior: Clip.hardEdge,
+        borderRadius: BorderRadius.circular(GpRadii.tarjeta),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (title != null) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  title!,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
               ),
-            ),
-            const Divider(),
+              const Divider(),
+            ],
+            ...children,
           ],
-          ...children,
-        ],
+        ),
       ),
     );
   }
