@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../../../core/network/api_client.dart';
 import '../../../core/network/app_exception.dart';
 import '../domain/catalogo_producto.dart';
 
@@ -9,11 +10,17 @@ class CatalogoRemote {
   final Dio _dio;
 
   Future<List<CatalogoProducto>> obtenerProductos() async {
-    final response = await _dio.get<List<dynamic>>('/catalogo/productos');
-    final data = response.data;
-    if (data == null) {
-      throw const SerializationException('Catálogo vacío.');
+    try {
+      final response = await _dio.get('/catalogo/productos');
+      final data = response.data;
+      if (data is! List) {
+        throw const SerializationException('Catálogo vacío.');
+      }
+      return data
+          .map((e) => CatalogoProducto.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      throw ApiClient.unwrap(e);
     }
-    return data.map((e) => CatalogoProducto.fromJson(e as Map<String, dynamic>)).toList();
   }
 }

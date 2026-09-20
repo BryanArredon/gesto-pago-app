@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/app_exception.dart';
+import '../../../core/providers/app_providers.dart';
 import '../../catalogo/domain/catalogo_producto.dart';
 import '../domain/pagos_repository.dart';
 import '../domain/transaccion.dart';
@@ -168,10 +169,8 @@ class PagoController extends Notifier<PagoFlowState> {
   }
 }
 
-final pagosRepositoryProvider =
-    Provider<PagosRepository>((ref) => throw UnimplementedError('pagosRepositoryProvider sin configurar.'));
-
-final pagoControllerProvider = NotifierProvider<PagoController, PagoFlowState>(PagoController.new);
+final pagoControllerProvider =
+    NotifierProvider<PagoController, PagoFlowState>(PagoController.new);
 
 class HistorialController extends AsyncNotifier<List<Transaccion>> {
   @override

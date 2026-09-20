@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/network/app_exception.dart';
+import '../../../core/providers/app_providers.dart';
 import '../domain/catalogo_producto.dart';
-import '../domain/catalogo_repository.dart';
 
 class CatalogoController extends AsyncNotifier<List<CatalogoProducto>> {
   @override
@@ -17,9 +17,6 @@ class CatalogoController extends AsyncNotifier<List<CatalogoProducto>> {
 
   String userMessage(AppException error) => 'No se pudo cargar el catálogo.';
 }
-
-final catalogoRepositoryProvider =
-    Provider<CatalogoRepository>((ref) => throw UnimplementedError('catalogoRepositoryProvider sin configurar.'));
 
 final catalogoControllerProvider =
     AsyncNotifierProvider<CatalogoController, List<CatalogoProducto>>(CatalogoController.new);

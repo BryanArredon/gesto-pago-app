@@ -50,6 +50,25 @@ class ApiClient {
   late final Dio _dio;
 
   Dio get dio => _dio;
+
+  /// Convierte cualquier error que salga de la capa HTTP a una [AppException].
+  ///
+  /// Dio 5.11 envuelve en un [DioException] (con el original en `error`) todo
+  /// lo que lanzan los interceptores, así que una [AppException] lanzada en el
+  /// interceptor nunca llega sola al caller: aquí se desempaqueta.
+  static AppException unwrap(Object error) {
+    if (error is AppException) {
+      return error;
+    }
+    if (error is DioException) {
+      final inner = error.error;
+      if (inner is AppException) {
+        return inner;
+      }
+      return _ErrorInterceptor.map(error);
+    }
+    return const ApiException('Error inesperado.');
+  }
 }
 
 /// Renueva el access token con un único refresh concurrente.
@@ -154,10 +173,10 @@ class _AuthInterceptor extends QueuedInterceptor {
 class _ErrorInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    throw _map(err);
+    throw map(err);
   }
 
-  AppException _map(DioException err) {
+  static AppException map(DioException err) {
     final status = err.response?.statusCode;
     final data = err.response?.data;
 
@@ -186,7 +205,7 @@ class _ErrorInterceptor extends Interceptor {
     }
   }
 
-  AppException _mapResponse(int? status, String message, String? code) {
+  static AppException _mapResponse(int? status, String message, String? code) {
     switch (status) {
       case 400:
       case 422:

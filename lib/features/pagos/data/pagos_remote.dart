@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../../../core/network/api_client.dart';
 import '../../../core/network/app_exception.dart';
 import '../domain/transaccion.dart';
 
@@ -13,45 +14,61 @@ class PagosRemote {
     required int idProducto,
     required String referencia,
   }) async {
-    final response = await _dio.post<Map<String, dynamic>>(
-      '/pagos/verificar-referencia',
-      data: {
-        'idServicio': idServicio,
-        'idProducto': idProducto,
-        'referencia': referencia,
-      },
-    );
-    final data = response.data;
-    if (data == null) {
-      throw const SerializationException('Verificación sin datos.');
+    try {
+      final response = await _dio.post(
+        '/pagos/verificar-referencia',
+        data: {
+          'idServicio': idServicio,
+          'idProducto': idProducto,
+          'referencia': referencia,
+        },
+      );
+      return VerificacionReferencia.fromJson(_map(response.data, 'Verificación'));
+    } catch (e) {
+      throw ApiClient.unwrap(e);
     }
-    return VerificacionReferencia.fromJson(data);
   }
 
   Future<Transaccion> crearTransaccion(Map<String, dynamic> request) async {
-    final response = await _dio.post<Map<String, dynamic>>('/pagos/transacciones', data: request);
-    return _parseTransaccion(response.data);
+    try {
+      final response = await _dio.post('/pagos/transacciones', data: request);
+      return _parseTransaccion(_map(response.data, 'Transacción'));
+    } catch (e) {
+      throw ApiClient.unwrap(e);
+    }
   }
 
   Future<Transaccion> confirmarTransaccion(int id) async {
-    final response =
-        await _dio.post<Map<String, dynamic>>('/pagos/transacciones/$id/confirmar');
-    return _parseTransaccion(response.data);
+    try {
+      final response =
+          await _dio.post('/pagos/transacciones/$id/confirmar');
+      return _parseTransaccion(_map(response.data, 'Transacción'));
+    } catch (e) {
+      throw ApiClient.unwrap(e);
+    }
   }
 
   Future<List<Transaccion>> historial() async {
-    final response = await _dio.get<List<dynamic>>('/pagos/transacciones');
-    final data = response.data;
-    if (data == null) {
-      return const [];
+    try {
+      final response = await _dio.get('/pagos/transacciones');
+      final data = response.data;
+      if (data is! List) {
+        return const [];
+      }
+      return data.map((e) => Transaccion.fromJson(e as Map<String, dynamic>)).toList();
+    } catch (e) {
+      throw ApiClient.unwrap(e);
     }
-    return data.map((e) => Transaccion.fromJson(e as Map<String, dynamic>)).toList();
   }
 
-  Transaccion _parseTransaccion(Map<String, dynamic>? data) {
-    if (data == null) {
-      throw const SerializationException('Transacción sin datos.');
+  Map<String, dynamic> _map(Object? data, String origen) {
+    if (data is Map<String, dynamic>) {
+      return data;
     }
+    throw SerializationException('Respuesta de $origen inválida.');
+  }
+
+  Transaccion _parseTransaccion(Map<String, dynamic> data) {
     return Transaccion.fromJson(data);
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -63,6 +64,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     } on AppException catch (e) {
       if (mounted) {
         setState(() => _error = messageDeError(context, e));
+      }
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('Registro falló con error inesperado: $e\n$st');
+      }
+      if (mounted) {
+        setState(() => _error = AppLocalizations.of(context).errorGeneric);
       }
     } finally {
       if (mounted) {

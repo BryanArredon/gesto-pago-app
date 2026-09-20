@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/providers/app_providers.dart';
 import '../domain/auth_repository.dart';
 import '../domain/auth_session.dart';
 
@@ -28,10 +29,19 @@ class SessionController extends Notifier<SessionState> {
   AuthRepository get _repository => ref.read(authRepositoryProvider);
 
   Future<void> restore() async {
-    final session = await _repository.restoreSession();
-    state = session != null && session.accessToken.isNotEmpty
-        ? SessionState(status: SessionStatus.authenticated, session: session)
-        : const SessionState.unauthenticated();
+    try {
+      final session = await _repository.restoreSession();
+      state = session != null && session.accessToken.isNotEmpty
+          ? SessionState(status: SessionStatus.authenticated, session: session)
+          : const SessionState.unauthenticated();
+    } catch (_) {
+      // Si falla la lectura del almacenamiento seguro, limpiar y salir a login:
+      // nunca dejar la app atascada en "Restaurando sesión…".
+      try {
+        await _repository.clearSession();
+      } catch (_) {}
+      state = const SessionState.unauthenticated();
+    }
   }
 
   Future<SessionState> login({required String email, required String password}) async {
@@ -67,10 +77,6 @@ class SessionController extends Notifier<SessionState> {
     state = const SessionState.unauthenticated();
   }
 }
-
-final authRepositoryProvider = Provider<AuthRepository>((ref) {
-  throw UnimplementedError('authRepositoryProvider debe ser sobreescrito al arrancar la app.');
-});
 
 final sessionControllerProvider =
     NotifierProvider<SessionController, SessionState>(SessionController.new);

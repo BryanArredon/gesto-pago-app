@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../../../core/network/api_client.dart';
 import '../../../core/network/app_exception.dart';
 import '../../auth/domain/auth_session.dart';
 
@@ -25,8 +26,8 @@ class LoginResponse {
       refreshToken: refreshToken,
       tokenType: json['tokenType'] as String? ?? 'Bearer',
       expiresIn: (json['expiresIn'] as num?)?.toInt() ?? 0,
-      nombre: nombre,
-      roles: (json['roles'] as List?)?.cast<String>() ?? const [],
+      nombre: nombre is String ? nombre : '',
+      roles: (json['roles'] as List?)?.whereType<String>().toList() ?? const [],
     );
   }
 
@@ -56,15 +57,15 @@ class AuthRemote {
     required String email,
     required String password,
   }) async {
-    final response = await _dio.post<Map<String, dynamic>>(
-      '/auth/login',
-      data: {'email': email.trim().toLowerCase(), 'password': password},
-    );
-    final data = response.data;
-    if (data == null) {
-      throw const SerializationException('Respuesta de login vacía.');
+    try {
+      final response = await _dio.post(
+        '/auth/login',
+        data: {'email': email.trim().toLowerCase(), 'password': password},
+      );
+      return LoginResponse.fromJson(_mapJson(response.data, 'login'));
+    } catch (e) {
+      throw ApiClient.unwrap(e);
     }
-    return LoginResponse.fromJson(data);
   }
 
   Future<LoginResponse> register({
@@ -72,27 +73,37 @@ class AuthRemote {
     required String email,
     required String password,
   }) async {
-    final response = await _dio.post<Map<String, dynamic>>(
-      '/auth/register',
-      data: {'nombre': nombre, 'email': email.trim().toLowerCase(), 'password': password},
-    );
-    final data = response.data;
-    if (data == null) {
-      throw const SerializationException('Respuesta de registro vacía.');
+    try {
+      final response = await _dio.post(
+        '/auth/register',
+        data: {'nombre': nombre, 'email': email.trim().toLowerCase(), 'password': password},
+      );
+      return LoginResponse.fromJson(_mapJson(response.data, 'registro'));
+    } catch (e) {
+      throw ApiClient.unwrap(e);
     }
-    return LoginResponse.fromJson(data);
   }
 
   Future<LoginResponse> refresh({required String refreshToken}) async {
-    final response = await _dio.post<Map<String, dynamic>>(
-      '/auth/refresh',
-      data: {'refreshToken': refreshToken},
-    );
-    final data = response.data;
-    if (data == null) {
-      throw const SerializationException('Respuesta de refresh vacía.');
+    try {
+      final response = await _dio.post(
+        '/auth/refresh',
+        data: {'refreshToken': refreshToken},
+      );
+      return LoginResponse.fromJson(_mapJson(response.data, 'refresh'));
+    } catch (e) {
+      throw ApiClient.unwrap(e);
     }
-    return LoginResponse.fromJson(data);
+  }
+
+  /// Convierte el body a mapa de autenticación. Si el servidor respondió con
+  /// algo que no es un JSON objeto (HTML, texto, error de proxy/CORS), se
+  /// lanza una [SerializationException] tipada en lugar de un TypeError crudo.
+  static Map<String, dynamic> _mapJson(Object? data, String accion) {
+    if (data is Map<String, dynamic>) {
+      return data;
+    }
+    throw SerializationException('Respuesta de $accion inválida.');
   }
 
   Future<void> logout({required String refreshToken}) async {

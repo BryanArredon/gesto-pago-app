@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -54,6 +55,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ? AppLocalizations.of(context).loginInvalidCredentials
               : messageDeError(context, e);
       setState(() => _error = mensaje);
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint('Login falló con error inesperado: $e\n$st');
+      }
+      if (mounted) {
+        setState(() => _error = AppLocalizations.of(context).errorGeneric);
+      }
     } finally {
       if (mounted) {
         setState(() => _cargando = false);

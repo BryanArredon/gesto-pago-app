@@ -14,7 +14,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<AuthSession> login({required String email, required String password}) async {
     final response = await _remote.login(email: email, password: password);
     final session = response.toSession(email.trim().toLowerCase());
-    await _persist(session);
+    await _persistIgnorandoErrores(session);
     return session;
   }
 
@@ -30,7 +30,7 @@ class AuthRepositoryImpl implements AuthRepository {
       password: password,
     );
     final session = response.toSession(email.trim().toLowerCase());
-    await _persist(session);
+    await _persistIgnorandoErrores(session);
     return session;
   }
 
@@ -76,6 +76,18 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> clearSession() => _tokenStore.clear();
+
+  /// Persiste la sesión; si el almacenamiento seguro falla (p. ej. keystore
+  /// disponible a medias) NO rompe un login/registro ya autorizado por el
+  /// backend: la sesión sigue activa en memoria y se re-persiste en el
+  /// siguiente refresh. Al reiniciar la app el usuario volvería a entrar.
+  Future<void> _persistIgnorandoErrores(AuthSession session) async {
+    try {
+      await _persist(session);
+    } catch (_) {
+      // Se mantiene la sesión en memoria; el interceptor deja tokens al refrescar.
+    }
+  }
 
   Future<void> _persist(AuthSession session) {
     return _tokenStore.save(

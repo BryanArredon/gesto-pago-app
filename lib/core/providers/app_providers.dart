@@ -29,16 +29,24 @@ final tokenRefresherBridgeProvider = Provider<TokenRefresherBridge>(
   (_) => TokenRefresherBridge(),
 );
 
-/// Cliente HTTP compartido. El refresher se resuelve solo frente a un 401
-/// (ver [TokenRefresherBridge]) para evitar dependencia circular.
+/// Puente que entrega a [ApiClient] el aviso de sesión expirada sin depender
+/// del [SessionController] (rompe el ciclo ApiClient -> SessionController ->
+/// AuthRepository -> ApiClient).
+final sessionExpiredBridgeProvider = Provider<SessionExpiredBridge>(
+  (_) => SessionExpiredBridge(),
+);
+
+/// Cliente HTTP compartido. El refresher y el aviso de sesión expirada se
+/// resuelven a través de puentes (ver [TokenRefresherBridge] y
+/// [SessionExpiredBridge]) para evitar dependencias circulares.
 final apiClientProvider = Provider<ApiClient>((Ref ref) {
   final tokenStore = ref.watch(tokenStoreProvider);
-  final sessionController = ref.watch(sessionControllerProvider.notifier);
   final bridge = ref.watch(tokenRefresherBridgeProvider);
+  final sessionExpired = ref.watch(sessionExpiredBridgeProvider);
   return ApiClient(
     tokenStore: tokenStore,
     tokenRefresher: bridge.resolve,
-    onSessionExpired: sessionController.onSessionExpired,
+    onSessionExpired: sessionExpired.resolve,
   );
 });
 
