@@ -1,21 +1,16 @@
 import 'package:flutter/material.dart';
 
+import '../theme/gp_colors.dart';
+
 /// Vista de error reutilizable con acción de reintento.
 class AppErrorView extends StatelessWidget {
-  const AppErrorView({
-    super.key,
-    required this.message,
-    this.onRetry,
-    this.icon = Icons.cloud_off_outlined,
-  });
+  const AppErrorView({super.key, required this.message, this.onRetry});
 
   final String message;
   final VoidCallback? onRetry;
-  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -23,7 +18,19 @@ class AppErrorView extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 48, color: scheme.error),
+            Container(
+              width: 120,
+              height: 120,
+              decoration: const BoxDecoration(
+                color: GpColors.errorClaro,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.cloud_off_outlined,
+                size: 52,
+                color: GpColors.error,
+              ),
+            ),
             const SizedBox(height: 16),
             Text(
               message,

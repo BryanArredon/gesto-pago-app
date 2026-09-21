@@ -211,6 +211,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get catalogError => 'No se pudo cargar el catálogo.';
 
   @override
+  String get homeSectionPopular => 'Los más usados';
+
+  @override
+  String get homeSectionRecent => 'Recientes';
+
+  @override
+  String get homeSectionCatalog => 'Catálogo completo';
+
+  @override
   String get pagoReferenceLabel => 'Referencia';
 
   @override

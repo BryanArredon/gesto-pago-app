@@ -90,8 +90,8 @@ class _ComprobanteScreenState extends ConsumerState<ComprobanteScreen> {
             Column(
               children: [
                 Container(
-                  width: 88,
-                  height: 88,
+                  width: 140,
+                  height: 140,
                   decoration: BoxDecoration(
                     color: aprobada
                         ? GpColors.exitoClaro
@@ -106,7 +106,7 @@ class _ComprobanteScreenState extends ConsumerState<ComprobanteScreen> {
                         : fallida
                             ? Icons.close_rounded
                             : Icons.hourglass_top,
-                    size: 46,
+                    size: 76,
                     color: aprobada
                         ? GpColors.exito
                         : fallida

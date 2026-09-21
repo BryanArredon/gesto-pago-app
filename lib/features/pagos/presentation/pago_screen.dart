@@ -6,6 +6,7 @@ import '../../../core/format/gp_money.dart';
 import '../../../core/format/message_de_error.dart';
 import '../../../core/theme/gp_colors.dart';
 import '../../../core/theme/gp_theme.dart';
+import '../../../core/widgets/brand_mark.dart';
 import '../../../core/widgets/money_text.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../catalogo/application/catalogo_controller.dart';
@@ -255,17 +256,21 @@ class _ProductoHeader extends StatelessWidget {
         color: scheme.surface,
         borderRadius: BorderRadius.circular(GpRadii.tarjeta),
         border: Border.all(color: scheme.outline),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: GpColors.verde.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(Icons.payments_outlined, color: scheme.primary, size: 28),
+          BrandMark(
+            servicio: producto.servicio,
+            categoria: producto.idCatTipoServicio,
+            tamano: 54,
+            radio: 16,
           ),
           const SizedBox(width: 14),
           Expanded(

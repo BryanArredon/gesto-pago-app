@@ -488,6 +488,24 @@ abstract class AppLocalizations {
   /// **'Unable to load the catalog.'**
   String get catalogError;
 
+  /// No description provided for @homeSectionPopular.
+  ///
+  /// In en, this message translates to:
+  /// **'Most popular'**
+  String get homeSectionPopular;
+
+  /// No description provided for @homeSectionRecent.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get homeSectionRecent;
+
+  /// No description provided for @homeSectionCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Full catalog'**
+  String get homeSectionCatalog;
+
   /// No description provided for @pagoReferenceLabel.
   ///
   /// In en, this message translates to:

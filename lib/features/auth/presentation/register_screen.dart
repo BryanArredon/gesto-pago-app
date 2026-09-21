@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,6 +7,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/format/message_de_error.dart';
 import '../../../core/network/app_exception.dart';
+import '../../../core/theme/gp_assets.dart';
+import '../../../core/theme/gp_colors.dart';
+import '../../../core/theme/gp_theme.dart';
 import '../../../core/widgets/password_field.dart';
 import '../../../l10n/app_localizations.dart';
 import '../application/session_controller.dart';
@@ -24,8 +29,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _confirmacionController = TextEditingController();
   bool _cargando = false;
   String? _error;
-
-  static final _emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
 
   @override
   void dispose() {
@@ -82,106 +85,215 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final oscuro = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      appBar: AppBar(title: Text(l.registerTitle)),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(l.registerSubtitle, style: Theme.of(context).textTheme.bodyLarge),
-                    const SizedBox(height: 24),
-                    TextFormField(
-                      controller: _nombreController,
-                      enabled: !_cargando,
-                      textCapitalization: TextCapitalization.words,
-                      textInputAction: TextInputAction.next,
-                      autocorrect: false,
-                      decoration: InputDecoration(
-                        labelText: l.registerNameLabel,
-                        prefixIcon: const Icon(Icons.badge_outlined),
-                      ),
-                      validator: (value) =>
-                          (value?.trim().isEmpty ?? true) ? l.registerNameRequired : null,
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _emailController,
-                      enabled: !_cargando,
-                      keyboardType: TextInputType.emailAddress,
-                      autofillHints: const [AutofillHints.email],
-                      autocorrect: false,
-                      textInputAction: TextInputAction.next,
-                      decoration: InputDecoration(
-                        labelText: l.registerEmailLabel,
-                        prefixIcon: const Icon(Icons.alternate_email),
-                      ),
-                      validator: (value) {
-                        final v = value?.trim() ?? '';
-                        if (v.isEmpty) {
-                          return l.loginEmailRequired;
-                        }
-                        if (!_emailRegex.hasMatch(v)) {
-                          return l.loginEmailInvalid;
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    PasswordField(
-                      controller: _passwordController,
-                      label: l.registerPasswordLabel,
-                      enabled: !_cargando,
-                    ),
-                    const SizedBox(height: 16),
-                    PasswordField(
-                      controller: _confirmacionController,
-                      label: l.registerConfirmPasswordLabel,
-                      enabled: !_cargando,
-                      onSubmitted: (_) => _cargando ? null : _crearCuenta(),
-                    ),
-                    if (_error != null) ...[
-                      const SizedBox(height: 16),
-                      _ErrorBanner(mensaje: _error!),
-                    ],
-                    const SizedBox(height: 24),
-                    FilledButton(
-                      onPressed: _cargando ? null : _crearCuenta,
-                      child: _cargando
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(strokeWidth: 2.4),
-                            )
-                          : Text(l.registerButton),
-                    ),
-                    const SizedBox(height: 24),
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        Text(
-                          l.registerAlreadyHaveAccount,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                        TextButton(
-                          onPressed: _cargando ? null : () => context.go('/login'),
-                          child: Text(l.registerSignIn),
-                        ),
-                      ],
-                    ),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+      extendBodyBehindAppBar: true,
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              GpAssets.loginFondo,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => ColoredBox(
+                color: oscuro ? GpColors.fondoOscuro : GpColors.verde,
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.26),
+                    Colors.black.withValues(alpha: 0.08),
                   ],
                 ),
               ),
             ),
           ),
-        ),
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        l.registerSubtitle,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyLarge
+                            ?.copyWith(color: Colors.white.withValues(alpha: 0.9)),
+                      ),
+                      const SizedBox(height: 24),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(GpRadii.dialogo),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+                          child: Container(
+                            padding: const EdgeInsets.all(GpSpacing.xl),
+                            decoration: BoxDecoration(
+                              color: oscuro
+                                  ? const Color(0xE6161D1A)
+                                  : const Color(0xF2FFFFFF),
+                              borderRadius: BorderRadius.circular(GpRadii.dialogo),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.35),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.14),
+                                  blurRadius: 36,
+                                  offset: const Offset(0, 16),
+                                ),
+                              ],
+                            ),
+                            child: _FormularioRegistro(
+                              l: l,
+                              formKey: _formKey,
+                              nombreController: _nombreController,
+                              emailController: _emailController,
+                              passwordController: _passwordController,
+                              confirmacionController: _confirmacionController,
+                              cargando: _cargando,
+                              error: _error,
+                              onCrear: _crearCuenta,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FormularioRegistro extends StatelessWidget {
+  const _FormularioRegistro({
+    required this.l,
+    required this.formKey,
+    required this.nombreController,
+    required this.emailController,
+    required this.passwordController,
+    required this.confirmacionController,
+    required this.cargando,
+    required this.error,
+    required this.onCrear,
+  });
+
+  final AppLocalizations l;
+  final GlobalKey<FormState> formKey;
+  final TextEditingController nombreController;
+  final TextEditingController emailController;
+  final TextEditingController passwordController;
+  final TextEditingController confirmacionController;
+  final bool cargando;
+  final String? error;
+  final VoidCallback onCrear;
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextFormField(
+            controller: nombreController,
+            enabled: !cargando,
+            textCapitalization: TextCapitalization.words,
+            textInputAction: TextInputAction.next,
+            autocorrect: false,
+            decoration: InputDecoration(
+              labelText: l.registerNameLabel,
+              prefixIcon: const Icon(Icons.badge_outlined),
+            ),
+            validator: (value) =>
+                (value?.trim().isEmpty ?? true) ? l.registerNameRequired : null,
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: emailController,
+            enabled: !cargando,
+            keyboardType: TextInputType.emailAddress,
+            autofillHints: const [AutofillHints.email],
+            autocorrect: false,
+            textInputAction: TextInputAction.next,
+            decoration: InputDecoration(
+              labelText: l.registerEmailLabel,
+              prefixIcon: const Icon(Icons.alternate_email),
+            ),
+            validator: (value) {
+              final v = value?.trim() ?? '';
+              if (v.isEmpty) {
+                return l.loginEmailRequired;
+              }
+              if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(v)) {
+                return l.loginEmailInvalid;
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          PasswordField(
+            controller: passwordController,
+            label: l.registerPasswordLabel,
+            enabled: !cargando,
+          ),
+          const SizedBox(height: 16),
+          PasswordField(
+            controller: confirmacionController,
+            label: l.registerConfirmPasswordLabel,
+            enabled: !cargando,
+            onSubmitted: (_) => cargando ? null : onCrear(),
+          ),
+          if (error != null) ...[
+            const SizedBox(height: 16),
+            _ErrorBanner(mensaje: error!),
+          ],
+          const SizedBox(height: 24),
+          FilledButton(
+            onPressed: cargando ? null : onCrear,
+            child: cargando
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2.4),
+                  )
+                : Text(l.registerButton),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text(
+                l.registerAlreadyHaveAccount,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              TextButton(
+                onPressed: cargando ? null : () => context.go('/login'),
+                child: Text(l.registerSignIn),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

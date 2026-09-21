@@ -1,30 +1,35 @@
 import 'package:flutter/material.dart';
 
+import '../theme/gp_colors.dart';
+
+/// Vista de "sin resultados" con ícono en lugar de imagen.
 class AppEmptyView extends StatelessWidget {
-  const AppEmptyView({
-    super.key,
-    required this.message,
-    this.icon = Icons.inbox_outlined,
-  });
+  const AppEmptyView({super.key, required this.message});
 
   final String message;
-  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 56,
-              color: scheme.onSurfaceVariant.withValues(alpha: 0.5),
+            Container(
+              width: 120,
+              height: 120,
+              decoration: const BoxDecoration(
+                color: GpColors.neutro,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.inbox_outlined,
+                size: 52,
+                color: Theme.of(context).colorScheme.surface,
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             Text(
               message,
               style: Theme.of(context).textTheme.bodyMedium,

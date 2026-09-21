@@ -1,25 +1,17 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../core/theme/gp_colors.dart';
 import '../../../../../core/theme/gp_theme.dart';
+import '../../../../../core/widgets/brand_mark.dart';
 import '../../../../../core/widgets/money_text.dart';
 import '../../../../l10n/app_localizations.dart';
 import '../../domain/catalogo_producto.dart';
 
-/// Tarjeta de un producto/servicio del catálogo.
+/// Tarjeta de un producto/servicio del catálogo con logo de marca.
 class ServicioCard extends StatelessWidget {
   const ServicioCard({super.key, required this.producto, required this.onTap});
 
   final CatalogoProducto producto;
   final VoidCallback onTap;
-
-  IconData get _icono {
-    return switch (producto.idCatTipoServicio) {
-      CatalogoCategorias.pagoImpuestos => Icons.account_balance_outlined,
-      CatalogoCategorias.pagoDerechosAgua => Icons.water_drop_outlined,
-      _ => Icons.receipt_outlined,
-    };
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,26 +20,31 @@ class ServicioCard extends StatelessWidget {
 
     return Material(
       color: scheme.surface,
+      elevation: 0,
       borderRadius: BorderRadius.circular(GpRadii.tarjeta),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(GpRadii.tarjeta),
-        child: Ink(
+        child: Container(
           padding: const EdgeInsets.all(GpSpacing.lg),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(GpRadii.tarjeta),
             border: Border.all(color: scheme.outline),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
           child: Row(
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: GpColors.verde.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(_icono, color: scheme.primary, size: 26),
+              BrandMark(
+                servicio: producto.servicio,
+                categoria: producto.idCatTipoServicio,
+                tamano: 52,
+                radio: 15,
               ),
               const SizedBox(width: 14),
               Expanded(
