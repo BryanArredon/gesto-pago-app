@@ -313,7 +313,7 @@ class _ProductoHeader extends StatelessWidget {
                     MoneyText(
                       monto: producto.precio,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: GpColors.verde,
+                            color: scheme.primary,
                             fontWeight: FontWeight.w900,
                           ),
                       negritas: true,
@@ -328,21 +328,21 @@ class _ProductoHeader extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: GpColors.verde.withValues(alpha: 0.08),
+                color: scheme.surfaceContainerHighest.withValues(alpha: 0.6),
                 borderRadius: BorderRadius.circular(GpRadii.campo),
                 border: Border.all(
-                  color: GpColors.verde.withValues(alpha: 0.25),
+                  color: scheme.outline,
                 ),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Padding(
-                    padding: EdgeInsets.only(top: 2),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
                     child: Icon(
                       Icons.info_outline_rounded,
                       size: 16,
-                      color: GpColors.verde,
+                      color: scheme.primary,
                     ),
                   ),
                   const SizedBox(width: 8),

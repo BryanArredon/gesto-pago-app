@@ -496,7 +496,7 @@ class _TarjetaPagoReciente extends StatelessWidget {
                     '\$${transaccion.monto}',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w800,
-                          color: GpColors.verde,
+                          color: scheme.primary,
                         ),
                   ),
                   const SizedBox(height: 2),
@@ -607,6 +607,7 @@ class _BannerInicio extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
     return ClipRRect(
       borderRadius: BorderRadius.circular(GpRadii.tarjeta),
       child: SizedBox(
@@ -619,9 +620,9 @@ class _BannerInicio extends StatelessWidget {
               GpAssets.banner,
               fit: BoxFit.cover,
               errorBuilder: (_, _, _) => DecoratedBox(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Color(0xFF0A6B4B), GpColors.verde],
+                    colors: [const Color(0xFF1E3A8A), scheme.primary],
                   ),
                 ),
               ),
@@ -652,8 +653,8 @@ class _BannerInicio extends StatelessWidget {
                           backgroundColor: Colors.white,
                           child: Text(
                             onIniciales(nombre!),
-                            style: const TextStyle(
-                              color: GpColors.verde,
+                            style: TextStyle(
+                              color: scheme.primary,
                               fontWeight: FontWeight.w800,
                               fontSize: 16,
                             ),

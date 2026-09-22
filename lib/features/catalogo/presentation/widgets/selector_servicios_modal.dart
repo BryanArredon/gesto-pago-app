@@ -398,13 +398,13 @@ class _VistaProductosCompaniaState extends State<_VistaProductosCompania> {
                       fontWeight: activo ? FontWeight.w700 : FontWeight.w500,
                       color: activo ? Colors.white : scheme.onSurface,
                     ),
-                    selectedColor: GpColors.verde,
+                    selectedColor: scheme.primary,
                     checkmarkColor: Colors.white,
                     backgroundColor: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                       side: BorderSide(
-                        color: activo ? GpColors.verde : scheme.outline,
+                        color: activo ? scheme.primary : scheme.outline,
                       ),
                     ),
                     onSelected: (_) {
@@ -420,7 +420,7 @@ class _VistaProductosCompaniaState extends State<_VistaProductosCompania> {
 
         const SizedBox(height: 4),
 
-        // 3. Lista de productos limpios sin iconos repetitivos
+        // 3. Lista de productos limpios sin iconos repetitivos ni recuadros extras
         Expanded(
           child: productosFiltrados.isEmpty
               ? Center(
@@ -470,7 +470,7 @@ class _VistaProductosCompaniaState extends State<_VistaProductosCompania> {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              // Título del producto y Descripción / Vigencia
+                              // Título del producto y Descripción limpia como texto normal
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -485,40 +485,19 @@ class _VistaProductosCompaniaState extends State<_VistaProductosCompania> {
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                     ),
-                                    const SizedBox(height: 4),
-                                    if (tieneDescripcion)
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 3,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: GpColors.verde.withValues(alpha: 0.08),
-                                          borderRadius: BorderRadius.circular(6),
-                                          border: Border.all(
-                                            color: GpColors.verde.withValues(alpha: 0.2),
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      tieneDescripcion
+                                          ? prod.legend!.trim()
+                                          : (prod.esPrecioFinal ? 'Recarga prepago' : 'Pago de servicio'),
+                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                            color: scheme.onSurfaceVariant,
+                                            fontSize: 12.5,
+                                            height: 1.25,
                                           ),
-                                        ),
-                                        child: Text(
-                                          prod.legend!.trim(),
-                                          style: const TextStyle(
-                                            color: GpColors.verde,
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 11.5,
-                                            height: 1.2,
-                                          ),
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      )
-                                    else
-                                      Text(
-                                        prod.esPrecioFinal ? 'Recarga prepago' : 'Pago de servicio',
-                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                              color: scheme.onSurfaceVariant,
-                                              fontSize: 12,
-                                            ),
-                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ],
                                 ),
                               ),
@@ -535,7 +514,7 @@ class _VistaProductosCompaniaState extends State<_VistaProductosCompania> {
                                       monto: prod.precio,
                                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                             fontWeight: FontWeight.w800,
-                                            color: GpColors.verde,
+                                            color: scheme.primary,
                                             fontSize: 16,
                                           ),
                                       negritas: true,
