@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/format/message_de_error.dart';
 import '../../../core/network/app_exception.dart';
 import '../../../core/providers/app_providers.dart';
+import '../../../core/theme/gp_assets.dart';
 import '../../../core/theme/gp_colors.dart';
 import '../../../core/theme/gp_theme.dart';
 import '../../../l10n/app_localizations.dart';
@@ -29,18 +30,6 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
     _paternoController.dispose();
     _maternoController.dispose();
     super.dispose();
-  }
-
-  String _iniciales(String nombre) {
-    final partes =
-        nombre.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
-    if (partes.isEmpty) {
-      return 'GP';
-    }
-    if (partes.length == 1) {
-      return partes.first.characters.first.toUpperCase();
-    }
-    return '${partes.first.characters.first}${partes.last.characters.first}'.toUpperCase();
   }
 
   Future<void> _editarDatosPersonales(AppLocalizations l, String nombreActual) async {
@@ -163,38 +152,73 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
         padding: const EdgeInsets.fromLTRB(GpSpacing.page, 8, GpSpacing.page, 24),
         children: [
           const SizedBox(height: 8),
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 32,
-                backgroundColor: GpColors.verde.withValues(alpha: 0.16),
-                child: Text(
-                  _iniciales(nombre),
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: Theme.of(context).colorScheme.primary,
+          Container(
+            padding: const EdgeInsets.all(GpSpacing.xl),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [Color(0xFF1E3A8A), Color(0xFF1D4ED8), Color(0xFF2563EB)],
+                stops: [0.0, 0.6, 1.0],
+              ),
+              borderRadius: BorderRadius.circular(GpRadii.tarjeta),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.12),
+                  blurRadius: 24,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Image.asset(
+                    GpAssets.logo,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, _, _) => const Icon(
+                      Icons.payments_outlined,
+                      size: 32,
+                      color: Color(0xFF1D4ED8),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      nombre.isEmpty ? l.perfilName : nombre,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      sesion.session?.email ?? '',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        nombre.isEmpty ? l.perfilName : nombre,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.4,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        sesion.session?.email ?? '',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           const SizedBox(height: 24),
           _TarjetaSeccion(

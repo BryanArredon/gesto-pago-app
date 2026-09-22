@@ -6,6 +6,7 @@ import '../../../core/format/gp_fecha.dart';
 import '../../../core/theme/gp_theme.dart';
 import '../../../core/widgets/app_empty_view.dart';
 import '../../../core/widgets/app_error_view.dart';
+import '../../../core/widgets/brand_mark.dart';
 import '../../../core/widgets/money_text.dart';
 import '../../../l10n/app_localizations.dart';
 import '../application/pago_controller.dart';
@@ -31,10 +32,7 @@ class HistorialScreen extends ConsumerWidget {
         ),
         data: (transacciones) {
           if (transacciones.isEmpty) {
-            return AppEmptyView(
-              message: l.historialEmpty,
-              icon: Icons.receipt_long_outlined,
-            );
+            return AppEmptyView(message: l.historialEmpty);
           }
           return RefreshIndicator(
             onRefresh: () => ref.read(historialControllerProvider.notifier).refresh(),
@@ -81,17 +79,30 @@ class _ItemHistorial extends ConsumerWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(GpRadii.tarjeta),
-        child: Ink(
+        child: Container(
           padding: const EdgeInsets.all(GpSpacing.lg),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(GpRadii.tarjeta),
             border: Border.all(color: scheme.outline),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
+                  BrandMark(
+                    servicio: transaccion.servicio,
+                    tamano: 40,
+                    radio: 12,
+                  ),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       transaccion.producto,
@@ -100,18 +111,14 @@ class _ItemHistorial extends ConsumerWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  const SizedBox(width: 8),
                   EstadoTransaccionBadge(
                     estado: transaccion.estado,
                     label: etiquetaEstado,
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
-              Text(
-                transaccion.servicio,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [

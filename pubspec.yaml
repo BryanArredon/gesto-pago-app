@@ -28,3 +28,9 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   generate: true
+
+  assets:
+    - assets/images/logo/
+    - assets/images/auth/
+    - assets/images/home/
+    - assets/images/marcas/

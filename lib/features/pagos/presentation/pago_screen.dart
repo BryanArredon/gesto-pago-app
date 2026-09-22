@@ -6,6 +6,7 @@ import '../../../core/format/gp_money.dart';
 import '../../../core/format/message_de_error.dart';
 import '../../../core/theme/gp_colors.dart';
 import '../../../core/theme/gp_theme.dart';
+import '../../../core/widgets/brand_mark.dart';
 import '../../../core/widgets/money_text.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../catalogo/application/catalogo_controller.dart';
@@ -249,49 +250,120 @@ class _ProductoHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
+    final tieneDescripcion = producto.legend != null && producto.legend!.trim().isNotEmpty;
+    final precioNum = double.tryParse(producto.precio) ?? 0.0;
+
     return Container(
       padding: const EdgeInsets.all(GpSpacing.lg),
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(GpRadii.tarjeta),
         border: Border.all(color: scheme.outline),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: GpColors.verde.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(Icons.payments_outlined, color: scheme.primary, size: 28),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(producto.producto, style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 2),
-                Text(producto.servicio, style: Theme.of(context).textTheme.bodySmall),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          Row(
             children: [
-              Text(
-                producto.esPrecioFinal ? l.catalogPrice : l.catalogCommission,
-                style: Theme.of(context).textTheme.bodySmall,
+              BrandMark(
+                servicio: producto.servicio,
+                categoria: producto.idCatTipoServicio,
+                tamano: 54,
+                radio: 16,
               ),
-              MoneyText(
-                monto: producto.precio,
-                style: Theme.of(context).textTheme.titleMedium,
-                negritas: true,
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      producto.producto,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      producto.servicio,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
+              if (producto.esPrecioFinal &&
+                  precioNum > 0 &&
+                  !producto.producto.contains('\$${precioNum.toInt()}') &&
+                  !producto.producto.contains('\$${producto.precio}') &&
+                  !RegExp(r'\b' + precioNum.toInt().toString() + r'\b').hasMatch(producto.producto))
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      l.catalogPrice,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                    ),
+                    MoneyText(
+                      monto: producto.precio,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: scheme.primary,
+                            fontWeight: FontWeight.w900,
+                          ),
+                      negritas: true,
+                    ),
+                  ],
+                ),
             ],
           ),
+          if (tieneDescripcion) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerHighest.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(GpRadii.campo),
+                border: Border.all(
+                  color: scheme.outline,
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Icon(
+                      Icons.info_outline_rounded,
+                      size: 16,
+                      color: scheme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      producto.legend!.trim(),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurface,
+                            fontWeight: FontWeight.w500,
+                            height: 1.3,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
