@@ -27,5 +27,12 @@ abstract final class GpAssets {
     'pase': 'assets/images/marcas/pase.png',
     'naturgy': 'assets/images/marcas/naturgy.png',
     'megacable': 'assets/images/marcas/megacable.png',
+    'roblox': 'assets/images/marcas/roblox.png',
+    'free_fire': 'assets/images/marcas/free_fire.png',
+    'freefire': 'assets/images/marcas/free_fire.png',
+    'telmex': 'assets/images/marcas/telmex.png',
+    'zeta_gas': 'assets/images/marcas/zeta_gas.png',
+    'zetagas': 'assets/images/marcas/zeta_gas.png',
+    'pillofon': 'assets/images/marcas/pillofon.png',
   };
 }

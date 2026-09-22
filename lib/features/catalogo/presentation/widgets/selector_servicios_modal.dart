@@ -5,11 +5,11 @@ import '../../../../core/theme/gp_colors.dart';
 import '../../../../core/theme/gp_theme.dart';
 import '../../../../core/widgets/brand_mark.dart';
 import '../../../../core/widgets/money_text.dart';
-import '../domain/catalogo_producto.dart';
-import '../domain/categoria_servicio.dart';
+import '../../domain/catalogo_producto.dart';
+import '../../domain/categoria_servicio.dart';
 
 /// Modal BottomSheet interactivo que gestiona la selección de compañías y
-/// sus productos/montos disponibles con una experiencia fluida.
+/// sus productos/montos disponibles con una experiencia organizada por pestañas y buscador.
 class SelectorServiciosModal extends StatefulWidget {
   const SelectorServiciosModal({
     super.key,
@@ -82,7 +82,7 @@ class _SelectorServiciosModalState extends State<SelectorServiciosModal> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final maxH = MediaQuery.of(context).size.height * 0.85;
+    final maxH = MediaQuery.of(context).size.height * 0.88;
 
     return Container(
       constraints: BoxConstraints(maxHeight: maxH),
@@ -135,6 +135,12 @@ class _SelectorServiciosModalState extends State<SelectorServiciosModal> {
                         color: widget.categoria!.color,
                         size: 20,
                       ),
+                    )
+                  else if (_companiaSeleccionada != null)
+                    BrandMark(
+                      servicio: _companiaSeleccionada!.nombre,
+                      tamano: 36,
+                      radio: 10,
                     ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -153,7 +159,7 @@ class _SelectorServiciosModalState extends State<SelectorServiciosModal> {
                         ),
                         Text(
                           _companiaSeleccionada != null
-                              ? 'Selecciona el monto o paquete'
+                              ? '${_companiaSeleccionada!.productos.length} opciones disponibles'
                               : 'Selecciona una compañía',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: scheme.onSurfaceVariant,
@@ -175,6 +181,7 @@ class _SelectorServiciosModalState extends State<SelectorServiciosModal> {
             Flexible(
               child: _companiaSeleccionada != null
                   ? _VistaProductosCompania(
+                      key: ValueKey(_companiaSeleccionada!.slug),
                       compania: _companiaSeleccionada!,
                       filtroController: _filtroController,
                       onSeleccionar: _seleccionarProducto,
@@ -186,7 +193,10 @@ class _SelectorServiciosModalState extends State<SelectorServiciosModal> {
                         if (comp.productos.length == 1) {
                           _seleccionarProducto(comp.productos.first);
                         } else {
-                          setState(() => _companiaSeleccionada = comp);
+                          setState(() {
+                            _companiaSeleccionada = comp;
+                            _filtroController.clear();
+                          });
                         }
                       },
                     ),
@@ -198,7 +208,7 @@ class _SelectorServiciosModalState extends State<SelectorServiciosModal> {
   }
 }
 
-/// Nivel 1: Lista de compañías dentro de una categoría
+/// Nivel 1: Lista de compañías consolidadas dentro de una categoría
 class _VistaCompaniasCategoria extends StatelessWidget {
   const _VistaCompaniasCategoria({
     required this.categoria,
@@ -275,7 +285,7 @@ class _VistaCompaniasCategoria extends StatelessWidget {
                         Text(
                           totalOpciones > 1
                               ? '$totalOpciones paquetes / montos disponibles'
-                              : 'Pago de servicio directo',
+                              : 'Pago directo',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: scheme.onSurfaceVariant,
                               ),
@@ -297,9 +307,10 @@ class _VistaCompaniasCategoria extends StatelessWidget {
   }
 }
 
-/// Nivel 2: Lista / Cuadrícula de productos de la compañía elegida
+/// Nivel 2: Productos de la compañía con pestañas por subcategoría y detalles limpios
 class _VistaProductosCompania extends StatefulWidget {
   const _VistaProductosCompania({
+    super.key,
     required this.compania,
     required this.filtroController,
     required this.onSeleccionar,
@@ -314,28 +325,43 @@ class _VistaProductosCompania extends StatefulWidget {
 }
 
 class _VistaProductosCompaniaState extends State<_VistaProductosCompania> {
+  late String _subgrupoSeleccionado;
+
+  @override
+  void initState() {
+    super.initState();
+    final subgrupos = widget.compania.subgrupos;
+    _subgrupoSeleccionado = subgrupos.keys.first;
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final subgrupos = widget.compania.subgrupos;
     final query = widget.filtroController.text.trim().toLowerCase();
 
-    final productosFiltrados = widget.compania.productos.where((p) {
+    // Obtener productos según el subgrupo activo
+    final productosBase = subgrupos[_subgrupoSeleccionado] ?? widget.compania.productos;
+
+    // Filtrar por texto de búsqueda si el usuario escribe
+    final productosFiltrados = productosBase.where((p) {
       if (query.isEmpty) return true;
-      return p.producto.toLowerCase().contains(query) ||
-          p.precio.contains(query);
+      final texto = '${p.producto} ${p.servicio} ${p.precio} ${p.legend ?? ''}'.toLowerCase();
+      return texto.contains(query);
     }).toList();
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Buscador interno si la compañía tiene más de 6 productos
-        if (widget.compania.productos.length > 6)
+        // 1. Buscador si la compañía tiene más de 5 productos
+        if (widget.compania.productos.length > 5)
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: TextField(
               controller: widget.filtroController,
               onChanged: (_) => setState(() {}),
               decoration: InputDecoration(
-                hintText: 'Filtrar por monto o paquete...',
+                hintText: 'Buscar por monto, paquete o vigencia...',
                 prefixIcon: const Icon(Icons.search, size: 20),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 suffixIcon: widget.filtroController.text.isNotEmpty
@@ -351,25 +377,76 @@ class _VistaProductosCompaniaState extends State<_VistaProductosCompania> {
             ),
           ),
 
-        // Lista de productos
+        // 2. Filtros de Subcategorías (Chips horizontales si hay más de 1 subgrupo)
+        if (subgrupos.length > 1)
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Row(
+              children: subgrupos.entries.map((entry) {
+                final nombre = entry.key;
+                final total = entry.value.length;
+                final activo = nombre == _subgrupoSeleccionado;
+
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: FilterChip(
+                    selected: activo,
+                    label: Text('$nombre ($total)'),
+                    labelStyle: TextStyle(
+                      fontSize: 12,
+                      fontWeight: activo ? FontWeight.w700 : FontWeight.w500,
+                      color: activo ? Colors.white : scheme.onSurface,
+                    ),
+                    selectedColor: GpColors.verde,
+                    checkmarkColor: Colors.white,
+                    backgroundColor: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide(
+                        color: activo ? GpColors.verde : scheme.outline,
+                      ),
+                    ),
+                    onSelected: (_) {
+                      setState(() {
+                        _subgrupoSeleccionado = nombre;
+                      });
+                    },
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+
+        const SizedBox(height: 4),
+
+        // 3. Lista de productos limpios sin iconos repetitivos
         Expanded(
           child: productosFiltrados.isEmpty
               ? Center(
                   child: Padding(
                     padding: const EdgeInsets.all(24),
-                    child: Text(
-                      'No hay productos que coincidan con la búsqueda.',
-                      style: Theme.of(context).textTheme.bodyMedium,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.search_off_rounded, size: 40, color: scheme.outline),
+                        const SizedBox(height: 8),
+                        Text(
+                          'No hay opciones que coincidan.',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
                     ),
                   ),
                 )
               : ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
                   itemCount: productosFiltrados.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final prod = productosFiltrados[index];
                     final precioNum = double.tryParse(prod.precio) ?? 0.0;
+                    final tieneDescripcion = prod.legend != null && prod.legend!.trim().isNotEmpty;
 
                     return Material(
                       color: scheme.surface,
@@ -378,31 +455,62 @@ class _VistaProductosCompaniaState extends State<_VistaProductosCompania> {
                         onTap: () => widget.onSeleccionar(prod),
                         borderRadius: BorderRadius.circular(GpRadii.tarjeta),
                         child: Container(
-                          padding: const EdgeInsets.all(14),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(GpRadii.tarjeta),
                             border: Border.all(color: scheme.outline),
                           ),
                           child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
+                              // Badge de Monto / Tipo destacado a la izquierda
                               Container(
-                                width: 44,
-                                height: 44,
+                                width: 62,
+                                height: 50,
                                 decoration: BoxDecoration(
-                                  color: GpColors.verde.withValues(alpha: 0.1),
+                                  color: precioNum > 0
+                                      ? GpColors.verde.withValues(alpha: 0.12)
+                                      : scheme.surfaceContainerHighest,
                                   borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Center(
-                                  child: Icon(
-                                    prod.esPrecioFinal
-                                        ? Icons.phone_android_rounded
-                                        : Icons.receipt_long_rounded,
-                                    color: GpColors.verde,
-                                    size: 22,
+                                  border: Border.all(
+                                    color: precioNum > 0
+                                        ? GpColors.verde.withValues(alpha: 0.3)
+                                        : scheme.outline,
                                   ),
                                 ),
+                                child: Center(
+                                  child: precioNum > 0
+                                      ? Column(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              '\$${precioNum.toStringAsFixed(precioNum.truncateToDouble() == precioNum ? 0 : 2)}',
+                                              style: const TextStyle(
+                                                color: GpColors.verde,
+                                                fontWeight: FontWeight.w900,
+                                                fontSize: 15,
+                                              ),
+                                            ),
+                                            const Text(
+                                              'MXN',
+                                              style: TextStyle(
+                                                color: GpColors.verde,
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 9,
+                                              ),
+                                            ),
+                                          ],
+                                        )
+                                      : Icon(
+                                          Icons.receipt_outlined,
+                                          color: scheme.onSurfaceVariant,
+                                          size: 22,
+                                        ),
+                                ),
                               ),
-                              const SizedBox(width: 12),
+                              const SizedBox(width: 14),
+
+                              // Título del producto y Descripción / Vigencia
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -411,48 +519,42 @@ class _VistaProductosCompaniaState extends State<_VistaProductosCompania> {
                                       prod.producto,
                                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                             fontWeight: FontWeight.w700,
+                                            height: 1.2,
                                           ),
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                     ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      prod.esPrecioFinal ? 'Recarga de saldo' : 'Pago por recibo',
-                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                            color: scheme.onSurfaceVariant,
-                                          ),
-                                    ),
+                                    const SizedBox(height: 3),
+                                    if (tieneDescripcion)
+                                      Text(
+                                        prod.legend!.trim(),
+                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                              color: GpColors.verde,
+                                              fontWeight: FontWeight.w600,
+                                              fontSize: 11.5,
+                                            ),
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                      )
+                                    else
+                                      Text(
+                                        prod.esPrecioFinal ? 'Recarga prepago' : 'Pago por recibo',
+                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                              color: scheme.onSurfaceVariant,
+                                              fontSize: 12,
+                                            ),
+                                      ),
                                   ],
                                 ),
                               ),
+
                               const SizedBox(width: 8),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  if (precioNum > 0)
-                                    MoneyText(
-                                      monto: prod.precio,
-                                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                            fontWeight: FontWeight.w800,
-                                            color: GpColors.verde,
-                                          ),
-                                      negritas: true,
-                                    )
-                                  else
-                                    Text(
-                                      'Monto libre',
-                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                            color: scheme.onSurfaceVariant,
-                                          ),
-                                    ),
-                                  const SizedBox(height: 2),
-                                  Icon(
-                                    Icons.arrow_forward_rounded,
-                                    size: 16,
-                                    color: scheme.onSurfaceVariant,
-                                  ),
-                                ],
+
+                              // Flecha de navegación
+                              Icon(
+                                Icons.chevron_right_rounded,
+                                size: 22,
+                                color: scheme.onSurfaceVariant,
                               ),
                             ],
                           ),
