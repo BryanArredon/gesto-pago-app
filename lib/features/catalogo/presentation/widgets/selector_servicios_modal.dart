@@ -448,6 +448,19 @@ class _VistaProductosCompaniaState extends State<_VistaProductosCompania> {
                     final precioNum = double.tryParse(prod.precio) ?? 0.0;
                     final tieneDescripcion = prod.legend != null && prod.legend!.trim().isNotEmpty;
 
+                    // Determinar icono representativo según tipo
+                    final text = '${prod.producto} ${prod.servicio}'.toLowerCase();
+                    IconData icono;
+                    if (text.contains('internet') || text.contains('datos') || text.contains('mb') || text.contains('gb')) {
+                      icono = Icons.wifi_rounded;
+                    } else if (text.contains('paquete') || text.contains('sin limite')) {
+                      icono = Icons.all_inclusive_rounded;
+                    } else if (prod.esPrecioFinal) {
+                      icono = Icons.phone_android_rounded;
+                    } else {
+                      icono = Icons.receipt_long_rounded;
+                    }
+
                     return Material(
                       color: scheme.surface,
                       borderRadius: BorderRadius.circular(GpRadii.tarjeta),
@@ -463,49 +476,20 @@ class _VistaProductosCompaniaState extends State<_VistaProductosCompania> {
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              // Badge de Monto / Tipo destacado a la izquierda
+                              // Icono limpio del tipo de producto (sin duplicar precio)
                               Container(
-                                width: 62,
-                                height: 50,
+                                width: 44,
+                                height: 44,
                                 decoration: BoxDecoration(
-                                  color: precioNum > 0
-                                      ? GpColors.verde.withValues(alpha: 0.12)
-                                      : scheme.surfaceContainerHighest,
+                                  color: GpColors.verde.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: precioNum > 0
-                                        ? GpColors.verde.withValues(alpha: 0.3)
-                                        : scheme.outline,
-                                  ),
                                 ),
                                 child: Center(
-                                  child: precioNum > 0
-                                      ? Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Text(
-                                              '\$${precioNum.toStringAsFixed(precioNum.truncateToDouble() == precioNum ? 0 : 2)}',
-                                              style: const TextStyle(
-                                                color: GpColors.verde,
-                                                fontWeight: FontWeight.w900,
-                                                fontSize: 15,
-                                              ),
-                                            ),
-                                            const Text(
-                                              'MXN',
-                                              style: TextStyle(
-                                                color: GpColors.verde,
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 9,
-                                              ),
-                                            ),
-                                          ],
-                                        )
-                                      : Icon(
-                                          Icons.receipt_outlined,
-                                          color: scheme.onSurfaceVariant,
-                                          size: 22,
-                                        ),
+                                  child: Icon(
+                                    icono,
+                                    color: GpColors.verde,
+                                    size: 22,
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 14),
@@ -548,12 +532,32 @@ class _VistaProductosCompaniaState extends State<_VistaProductosCompania> {
                                 ),
                               ),
 
-                              const SizedBox(width: 8),
+                              const SizedBox(width: 10),
 
-                              // Flecha de navegación
+                              // Precio único a la derecha + flecha
+                              if (precioNum > 0)
+                                MoneyText(
+                                  monto: prod.precio,
+                                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                        fontWeight: FontWeight.w800,
+                                        color: GpColors.verde,
+                                      ),
+                                  negritas: true,
+                                )
+                              else
+                                Text(
+                                  'Monto libre',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: scheme.onSurfaceVariant,
+                                      ),
+                                ),
+
+                              const SizedBox(width: 4),
+
                               Icon(
                                 Icons.chevron_right_rounded,
-                                size: 22,
+                                size: 20,
                                 color: scheme.onSurfaceVariant,
                               ),
                             ],

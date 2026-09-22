@@ -250,6 +250,9 @@ class _ProductoHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
+    final tieneDescripcion = producto.legend != null && producto.legend!.trim().isNotEmpty;
+    final precioNum = double.tryParse(producto.precio) ?? 0.0;
+
     return Container(
       padding: const EdgeInsets.all(GpSpacing.lg),
       decoration: BoxDecoration(
@@ -264,39 +267,99 @@ class _ProductoHeader extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          BrandMark(
-            servicio: producto.servicio,
-            categoria: producto.idCatTipoServicio,
-            tamano: 54,
-            radio: 16,
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(producto.producto, style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 2),
-                Text(producto.servicio, style: Theme.of(context).textTheme.bodySmall),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
+          Row(
             children: [
-              Text(
-                producto.esPrecioFinal ? l.catalogPrice : l.catalogCommission,
-                style: Theme.of(context).textTheme.bodySmall,
+              BrandMark(
+                servicio: producto.servicio,
+                categoria: producto.idCatTipoServicio,
+                tamano: 54,
+                radio: 16,
               ),
-              MoneyText(
-                monto: producto.precio,
-                style: Theme.of(context).textTheme.titleMedium,
-                negritas: true,
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      producto.producto,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      producto.servicio,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
+              if (producto.esPrecioFinal && precioNum > 0)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      l.catalogPrice,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                    ),
+                    MoneyText(
+                      monto: producto.precio,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: GpColors.verde,
+                            fontWeight: FontWeight.w900,
+                          ),
+                      negritas: true,
+                    ),
+                  ],
+                ),
             ],
           ),
+          if (tieneDescripcion) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: GpColors.verde.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(GpRadii.campo),
+                border: Border.all(
+                  color: GpColors.verde.withValues(alpha: 0.25),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(top: 2),
+                    child: Icon(
+                      Icons.info_outline_rounded,
+                      size: 16,
+                      color: GpColors.verde,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      producto.legend!.trim(),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurface,
+                            fontWeight: FontWeight.w500,
+                            height: 1.3,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
