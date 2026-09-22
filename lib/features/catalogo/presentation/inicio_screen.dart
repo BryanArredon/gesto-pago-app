@@ -15,7 +15,9 @@ import '../../pagos/application/pago_controller.dart';
 import '../../pagos/domain/transaccion.dart';
 import '../application/catalogo_controller.dart';
 import '../domain/catalogo_producto.dart';
+import '../domain/categoria_servicio.dart';
 import '../domain/servicios_frecuentes.dart';
+import '../presentation/widgets/selector_servicios_modal.dart';
 import '../presentation/widgets/servicio_card.dart';
 
 /// Inicio: saludo, búsqueda, acceso rápido a los servicios más usados y
@@ -114,10 +116,6 @@ class _InicioScreenState extends ConsumerState<InicioScreen> {
               data: (productos) => _ContenidoCatalogo(
                 productos: productos,
                 busqueda: _searchController.text.trim().toLowerCase(),
-                onCategoriaSeleccionada: (cat) {
-                  _searchController.text = cat;
-                  setState(() {});
-                },
               ),
               loading: () => const Expanded(child: AppLoadingView()),
               error: (error, stack) => Expanded(
@@ -140,12 +138,10 @@ class _ContenidoCatalogo extends ConsumerStatefulWidget {
   const _ContenidoCatalogo({
     required this.productos,
     required this.busqueda,
-    required this.onCategoriaSeleccionada,
   });
 
   final List<CatalogoProducto> productos;
   final String busqueda;
-  final ValueChanged<String> onCategoriaSeleccionada;
 
   @override
   ConsumerState<_ContenidoCatalogo> createState() => _ContenidoCatalogoState();
@@ -240,7 +236,11 @@ class _ContenidoCatalogoState extends ConsumerState<_ContenidoCatalogo> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: GpSpacing.page),
               child: _GridCategorias(
-                onSeleccionar: widget.onCategoriaSeleccionada,
+                onSeleccionar: (cat) => SelectorServiciosModal.mostrarCategoria(
+                  context,
+                  categoria: cat,
+                  catalogo: widget.productos,
+                ),
               ),
             ),
 
@@ -254,9 +254,23 @@ class _ContenidoCatalogoState extends ConsumerState<_ContenidoCatalogo> {
                     _TarjetaAcceso(
                       titulo: producto.servicio,
                       servicio: producto.servicio,
-                      onTap: () => context.push(
-                        '/pago/${producto.idServicio}/${producto.idProducto}',
-                      ),
+                      onTap: () {
+                        final comp = obtenerCompaniaPorNombre(
+                          widget.productos,
+                          producto.servicio,
+                        );
+                        if (comp != null && comp.productos.length > 1) {
+                          SelectorServiciosModal.mostrarCompania(
+                            context,
+                            compania: comp,
+                            catalogo: widget.productos,
+                          );
+                        } else {
+                          context.push(
+                            '/pago/${producto.idServicio}/${producto.idProducto}',
+                          );
+                        }
+                      },
                     ),
                 ],
               ),
@@ -340,50 +354,12 @@ class _ContenidoCatalogoState extends ConsumerState<_ContenidoCatalogo> {
 class _GridCategorias extends StatelessWidget {
   const _GridCategorias({required this.onSeleccionar});
 
-  final ValueChanged<String> onSeleccionar;
-
-  static const _categorias = [
-    (
-      'Telefonía',
-      Icons.phone_android_rounded,
-      Color(0xFF0066FF),
-      'telcel',
-    ),
-    (
-      'Luz / CFE',
-      Icons.electric_bolt_rounded,
-      Color(0xFF008954),
-      'cfe',
-    ),
-    (
-      'Internet / TV',
-      Icons.wifi_rounded,
-      Color(0xFF7C3AED),
-      'totalplay',
-    ),
-    (
-      'Telepeaje',
-      Icons.toll_rounded,
-      Color(0xFF0D9488),
-      'pase',
-    ),
-    (
-      'Streaming',
-      Icons.play_circle_filled_rounded,
-      Color(0xFFE11D48),
-      'netflix',
-    ),
-    (
-      'Videojuegos',
-      Icons.sports_esports_rounded,
-      Color(0xFFEA580C),
-      'xbox',
-    ),
-  ];
+  final ValueChanged<CategoriaServicio> onSeleccionar;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final categorias = CategoriaServicio.categorias;
 
     return GridView.builder(
       shrinkWrap: true,
@@ -394,14 +370,14 @@ class _GridCategorias extends StatelessWidget {
         mainAxisSpacing: 10,
         childAspectRatio: 1.15,
       ),
-      itemCount: _categorias.length,
+      itemCount: categorias.length,
       itemBuilder: (context, index) {
-        final (nombre, icono, color, query) = _categorias[index];
+        final cat = categorias[index];
         return Material(
           color: scheme.surface,
           borderRadius: BorderRadius.circular(16),
           child: InkWell(
-            onTap: () => onSeleccionar(query),
+            onTap: () => onSeleccionar(cat),
             borderRadius: BorderRadius.circular(16),
             child: Container(
               decoration: BoxDecoration(
@@ -421,14 +397,14 @@ class _GridCategorias extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.12),
+                      color: cat.color.withValues(alpha: 0.12),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(icono, color: color, size: 24),
+                    child: Icon(cat.icono, color: cat.color, size: 24),
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    nombre,
+                    cat.titulo,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           fontWeight: FontWeight.w600,
                           fontSize: 12,
