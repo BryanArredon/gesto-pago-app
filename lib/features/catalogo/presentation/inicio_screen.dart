@@ -610,32 +610,63 @@ class _BannerInicio extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return ClipRRect(
       borderRadius: BorderRadius.circular(GpRadii.tarjeta),
-      child: SizedBox(
+      child: Container(
         height: 168,
         width: double.infinity,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(GpRadii.tarjeta),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF0F172A),
+              Color(0xFF1E3A8A),
+              Color(0xFF1D4ED8),
+            ],
+            stops: [0.0, 0.55, 1.0],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF1D4ED8).withValues(alpha: 0.25),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Image.asset(
-              GpAssets.banner,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => DecoratedBox(
+            Positioned(
+              top: -40,
+              right: -30,
+              child: Container(
+                width: 160,
+                height: 160,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [const Color(0xFF1E3A8A), scheme.primary],
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      Colors.white.withValues(alpha: 0.12),
+                      Colors.transparent,
+                    ],
                   ),
                 ),
               ),
             ),
-            const DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.black26,
-                    Colors.transparent,
-                  ],
+            Positioned(
+              bottom: -50,
+              left: -40,
+              child: Container(
+                width: 180,
+                height: 180,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      const Color(0xFF38BDF8).withValues(alpha: 0.15),
+                      Colors.transparent,
+                    ],
+                  ),
                 ),
               ),
             ),

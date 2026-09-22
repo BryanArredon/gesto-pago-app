@@ -80,23 +80,55 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset(
-              GpAssets.loginFondo,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => ColoredBox(
-                color: oscuro ? GpColors.fondoOscuro : const Color(0xFF1D4ED8),
-              ),
-            ),
-          ),
-          Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: oscuro
+                      ? [
+                          const Color(0xFF020617),
+                          const Color(0xFF0F172A),
+                          const Color(0xFF1E293B),
+                        ]
+                      : [
+                          const Color(0xFF0F172A),
+                          const Color(0xFF1E3A8A),
+                          const Color(0xFF1D4ED8),
+                        ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: -60,
+            right: -60,
+            child: Container(
+              width: 240,
+              height: 240,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
                   colors: [
-                    Colors.black.withValues(alpha: 0.26),
-                    Colors.black.withValues(alpha: 0.08),
+                    const Color(0xFF38BDF8).withValues(alpha: 0.2),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: -80,
+            left: -80,
+            child: Container(
+              width: 280,
+              height: 280,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFF6366F1).withValues(alpha: 0.25),
+                    Colors.transparent,
                   ],
                 ),
               ),
