@@ -300,7 +300,11 @@ class _ProductoHeader extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              if (producto.esPrecioFinal && precioNum > 0)
+              if (producto.esPrecioFinal &&
+                  precioNum > 0 &&
+                  !producto.producto.contains('\$${precioNum.toInt()}') &&
+                  !producto.producto.contains('\$${producto.precio}') &&
+                  !RegExp(r'\b' + precioNum.toInt().toString() + r'\b').hasMatch(producto.producto))
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [

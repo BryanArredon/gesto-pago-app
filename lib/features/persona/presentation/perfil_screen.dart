@@ -158,7 +158,7 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
               gradient: const LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFF0A6B4B), GpColors.verde, Color(0xFF1FA780)],
+                colors: [Color(0xFF1E3A8A), Color(0xFF1D4ED8), Color(0xFF2563EB)],
                 stops: [0.0, 0.6, 1.0],
               ),
               borderRadius: BorderRadius.circular(GpRadii.tarjeta),
@@ -183,10 +183,10 @@ class _PerfilScreenState extends ConsumerState<PerfilScreen> {
                   child: Image.asset(
                     GpAssets.logo,
                     fit: BoxFit.contain,
-                    errorBuilder: (_, _, _) => Icon(
+                    errorBuilder: (_, _, _) => const Icon(
                       Icons.payments_outlined,
                       size: 32,
-                      color: GpColors.verde,
+                      color: Color(0xFF1D4ED8),
                     ),
                   ),
                 ),

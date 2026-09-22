@@ -18,6 +18,12 @@ class ServicioCard extends StatelessWidget {
     final l = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
 
+    final precioNum = double.tryParse(producto.precio) ?? 0.0;
+    final precioEnTitulo = precioNum > 0 &&
+        (producto.producto.contains('\$${precioNum.toInt()}') ||
+         producto.producto.contains('\$${producto.precio}') ||
+         RegExp(r'\b' + precioNum.toInt().toString() + r'\b').hasMatch(producto.producto));
+
     return Material(
       color: scheme.surface,
       elevation: 0,
@@ -53,36 +59,41 @@ class ServicioCard extends StatelessWidget {
                   children: [
                     Text(
                       producto.producto,
-                      style: Theme.of(context).textTheme.titleMedium,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
                     Text(
                       producto.servicio,
-                      style: Theme.of(context).textTheme.bodySmall,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      producto.esPrecioFinal ? l.catalogPrice : l.catalogCommission,
-                      style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
+              Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  MoneyText(
-                    monto: producto.precio,
-                    style: Theme.of(context).textTheme.titleMedium,
-                    negritas: true,
-                  ),
-                  const SizedBox(height: 4),
-                  Icon(Icons.chevron_right, color: scheme.onSurfaceVariant),
+                  if (precioNum > 0 && !precioEnTitulo)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 6),
+                      child: MoneyText(
+                        monto: producto.precio,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: scheme.primary,
+                            ),
+                        negritas: true,
+                      ),
+                    ),
+                  Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
                 ],
               ),
             ],

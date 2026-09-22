@@ -84,7 +84,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               GpAssets.loginFondo,
               fit: BoxFit.cover,
               errorBuilder: (_, _, _) => ColoredBox(
-                color: oscuro ? GpColors.fondoOscuro : GpColors.verde,
+                color: oscuro ? GpColors.fondoOscuro : const Color(0xFF1D4ED8),
               ),
             ),
           ),
@@ -132,7 +132,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             fit: BoxFit.contain,
                             errorBuilder: (_, _, _) =>
                                 const Icon(Icons.payments_outlined,
-                                    size: 40, color: GpColors.verde),
+                                    size: 40, color: Color(0xFF1D4ED8)),
                           ),
                         ),
                       ),

@@ -31,7 +31,7 @@ class CategoriaServicio {
       id: 'luz_agua_gas',
       titulo: 'Luz, Agua y Gas',
       icono: Icons.bolt_rounded,
-      color: Color(0xFF008954),
+      color: Color(0xFF0284C7),
       marcas: ['cfe', 'naturgy', 'zeta_gas', 'siapa', 'sacmex', 'agua', 'gas'],
     ),
     CategoriaServicio(

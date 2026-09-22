@@ -447,6 +447,10 @@ class _VistaProductosCompaniaState extends State<_VistaProductosCompania> {
                     final prod = productosFiltrados[index];
                     final precioNum = double.tryParse(prod.precio) ?? 0.0;
                     final tieneDescripcion = prod.legend != null && prod.legend!.trim().isNotEmpty;
+                    final precioEnTitulo = precioNum > 0 &&
+                        (prod.producto.contains('\$${precioNum.toInt()}') ||
+                         prod.producto.contains('\$${prod.precio}') ||
+                         RegExp(r'\b' + precioNum.toInt().toString() + r'\b').hasMatch(prod.producto));
 
                     return Material(
                       color: scheme.surface,
@@ -504,41 +508,24 @@ class _VistaProductosCompaniaState extends State<_VistaProductosCompania> {
 
                               const SizedBox(width: 14),
 
-                              // Precio único y flecha de acción
+                              // Precio único (solo si NO está en el título) y flecha de acción
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  if (precioNum > 0)
-                                    MoneyText(
-                                      monto: prod.precio,
-                                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                            fontWeight: FontWeight.w800,
-                                            color: scheme.primary,
-                                            fontSize: 16,
-                                          ),
-                                      negritas: true,
-                                    )
-                                  else
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: scheme.surfaceContainerHighest,
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Text(
-                                        'Monto libre',
-                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                              fontWeight: FontWeight.w600,
-                                              color: scheme.onSurfaceVariant,
-                                              fontSize: 11.5,
+                                  if (precioNum > 0 && !precioEnTitulo)
+                                    Padding(
+                                      padding: const EdgeInsets.only(right: 6),
+                                      child: MoneyText(
+                                        monto: prod.precio,
+                                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                              fontWeight: FontWeight.w800,
+                                              color: scheme.primary,
+                                              fontSize: 16,
                                             ),
+                                        negritas: true,
                                       ),
                                     ),
-                                  const SizedBox(width: 8),
                                   Icon(
                                     Icons.arrow_forward_ios_rounded,
                                     size: 14,

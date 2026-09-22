@@ -100,7 +100,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               GpAssets.loginFondo,
               fit: BoxFit.cover,
               errorBuilder: (_, _, _) => ColoredBox(
-                color: oscuro ? GpColors.fondoOscuro : GpColors.verde,
+                color: oscuro ? GpColors.fondoOscuro : const Color(0xFF1D4ED8),
               ),
             ),
           ),

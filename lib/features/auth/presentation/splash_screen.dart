@@ -34,10 +34,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF0A6B4B),
-              GpColors.verde,
-              Color(0xFF1FA780),
-              Color(0xFF0E9F6E),
+              Color(0xFF0F172A),
+              Color(0xFF1E3A8A),
+              Color(0xFF1D4ED8),
+              Color(0xFF2563EB),
             ],
             stops: [0.0, 0.45, 0.75, 1.0],
           ),
@@ -80,7 +80,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                         errorBuilder: (_, _, _) => const Icon(
                           Icons.payments_outlined,
                           size: 56,
-                          color: GpColors.verde,
+                          color: Color(0xFF1D4ED8),
                         ),
                       ),
                     ),
