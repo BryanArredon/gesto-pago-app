@@ -448,19 +448,6 @@ class _VistaProductosCompaniaState extends State<_VistaProductosCompania> {
                     final precioNum = double.tryParse(prod.precio) ?? 0.0;
                     final tieneDescripcion = prod.legend != null && prod.legend!.trim().isNotEmpty;
 
-                    // Determinar icono representativo según tipo
-                    final text = '${prod.producto} ${prod.servicio}'.toLowerCase();
-                    IconData icono;
-                    if (text.contains('internet') || text.contains('datos') || text.contains('mb') || text.contains('gb')) {
-                      icono = Icons.wifi_rounded;
-                    } else if (text.contains('paquete') || text.contains('sin limite')) {
-                      icono = Icons.all_inclusive_rounded;
-                    } else if (prod.esPrecioFinal) {
-                      icono = Icons.phone_android_rounded;
-                    } else {
-                      icono = Icons.receipt_long_rounded;
-                    }
-
                     return Material(
                       color: scheme.surface,
                       borderRadius: BorderRadius.circular(GpRadii.tarjeta),
@@ -468,32 +455,21 @@ class _VistaProductosCompaniaState extends State<_VistaProductosCompania> {
                         onTap: () => widget.onSeleccionar(prod),
                         borderRadius: BorderRadius.circular(GpRadii.tarjeta),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(GpRadii.tarjeta),
                             border: Border.all(color: scheme.outline),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.03),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              // Icono limpio del tipo de producto (sin duplicar precio)
-                              Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  color: GpColors.verde.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Center(
-                                  child: Icon(
-                                    icono,
-                                    color: GpColors.verde,
-                                    size: 22,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 14),
-
                               // Título del producto y Descripción / Vigencia
                               Expanded(
                                 child: Column(
@@ -503,26 +479,41 @@ class _VistaProductosCompaniaState extends State<_VistaProductosCompania> {
                                       prod.producto,
                                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                             fontWeight: FontWeight.w700,
-                                            height: 1.2,
+                                            fontSize: 14.5,
+                                            height: 1.25,
                                           ),
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                     ),
-                                    const SizedBox(height: 3),
+                                    const SizedBox(height: 4),
                                     if (tieneDescripcion)
-                                      Text(
-                                        prod.legend!.trim(),
-                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                              color: GpColors.verde,
-                                              fontWeight: FontWeight.w600,
-                                              fontSize: 11.5,
-                                            ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 3,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: GpColors.verde.withValues(alpha: 0.08),
+                                          borderRadius: BorderRadius.circular(6),
+                                          border: Border.all(
+                                            color: GpColors.verde.withValues(alpha: 0.2),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          prod.legend!.trim(),
+                                          style: const TextStyle(
+                                            color: GpColors.verde,
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 11.5,
+                                            height: 1.2,
+                                          ),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       )
                                     else
                                       Text(
-                                        prod.esPrecioFinal ? 'Recarga prepago' : 'Pago por recibo',
+                                        prod.esPrecioFinal ? 'Recarga prepago' : 'Pago de servicio',
                                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                               color: scheme.onSurfaceVariant,
                                               fontSize: 12,
@@ -532,33 +523,49 @@ class _VistaProductosCompaniaState extends State<_VistaProductosCompania> {
                                 ),
                               ),
 
-                              const SizedBox(width: 10),
+                              const SizedBox(width: 14),
 
-                              // Precio único a la derecha + flecha
-                              if (precioNum > 0)
-                                MoneyText(
-                                  monto: prod.precio,
-                                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                        fontWeight: FontWeight.w800,
-                                        color: GpColors.verde,
+                              // Precio único y flecha de acción
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  if (precioNum > 0)
+                                    MoneyText(
+                                      monto: prod.precio,
+                                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                            fontWeight: FontWeight.w800,
+                                            color: GpColors.verde,
+                                            fontSize: 16,
+                                          ),
+                                      negritas: true,
+                                    )
+                                  else
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
                                       ),
-                                  negritas: true,
-                                )
-                              else
-                                Text(
-                                  'Monto libre',
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        color: scheme.onSurfaceVariant,
+                                      decoration: BoxDecoration(
+                                        color: scheme.surfaceContainerHighest,
+                                        borderRadius: BorderRadius.circular(6),
                                       ),
-                                ),
-
-                              const SizedBox(width: 4),
-
-                              Icon(
-                                Icons.chevron_right_rounded,
-                                size: 20,
-                                color: scheme.onSurfaceVariant,
+                                      child: Text(
+                                        'Monto libre',
+                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                              color: scheme.onSurfaceVariant,
+                                              fontSize: 11.5,
+                                            ),
+                                      ),
+                                    ),
+                                  const SizedBox(width: 8),
+                                  Icon(
+                                    Icons.arrow_forward_ios_rounded,
+                                    size: 14,
+                                    color: scheme.onSurfaceVariant.withValues(alpha: 0.6),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
