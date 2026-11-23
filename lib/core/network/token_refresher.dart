@@ -1,25 +1,26 @@
-/// Resultado de autenticación tras un refresh.
-class TokenRefreshResult {
-  const TokenRefreshResult({
-    required this.accessToken,
-    required this.refreshToken,
-    required this.nombre,
-  });
+/// Motivo por el que terminó la sesión; la pantalla de login lo explica.
+enum MotivoCierre {
+  /// El usuario cerró sesión.
+  manual,
 
-  final String accessToken;
-  final String refreshToken;
-  final String nombre;
+  /// Venció por inactividad o duración máxima.
+  expirada,
+
+  /// Se inició sesión en otro dispositivo (web) y esta se cerró.
+  revocada,
 }
 
-/// Interfaz que implementa el repositorio de autenticación para permitir
-/// renovar la sesión desde el interceptor HTTP (evita dependencias circulares).
+/// Renueva el token de acceso sobre la sesión vigente del servidor. Lo
+/// implementa el repositorio de autenticación; el interceptor HTTP lo usa
+/// sin depender de él directamente (evita dependencias circulares).
 abstract class TokenRefresher {
-  Future<TokenRefreshResult?> refreshSession(String refreshToken);
+  /// Nuevo token de acceso, o null si la sesión ya no es válida.
+  Future<String?> renovarSesion();
 }
 
 /// Puente que entrega el [TokenRefresher] activo sin crear una referencia
 /// circular estática entre ApiClient y AuthRepository. Se vincula una sola
-/// vez al arrancar la aplicación y se consulta solo si un 401 exige refresh.
+/// vez al arrancar la aplicación.
 class TokenRefresherBridge {
   TokenRefresher Function()? _lookup;
 
@@ -36,17 +37,16 @@ class TokenRefresherBridge {
   }
 }
 
-/// Puente para notificar la expiración de sesión sin que [ApiClient] dependa
-/// del [SessionController] (mismo patrón anti-circular que
-/// [TokenRefresherBridge]). Se enlaza una vez al arrancar la aplicación.
+/// Puente para notificar el fin de la sesión sin que [ApiClient] dependa del
+/// SessionController (mismo patrón anti-circular que [TokenRefresherBridge]).
 class SessionExpiredBridge {
-  void Function()? _lookup;
+  void Function(MotivoCierre motivo)? _lookup;
 
-  void bind(void Function() lookup) {
+  void bind(void Function(MotivoCierre motivo) lookup) {
     _lookup = lookup;
   }
 
-  void resolve() {
-    _lookup?.call();
+  void resolve(MotivoCierre motivo) {
+    _lookup?.call(motivo);
   }
 }
