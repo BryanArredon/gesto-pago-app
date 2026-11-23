@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/theme/gp_colors.dart';
 import '../../../../core/theme/gp_theme.dart';
 import '../../../../core/widgets/brand_mark.dart';
 import '../../../../core/widgets/money_text.dart';
@@ -11,12 +10,7 @@ import '../../domain/categoria_servicio.dart';
 /// Modal BottomSheet interactivo que gestiona la selección de compañías y
 /// sus productos/montos disponibles con una experiencia organizada por pestañas y buscador.
 class SelectorServiciosModal extends StatefulWidget {
-  const SelectorServiciosModal({
-    super.key,
-    this.categoria,
-    this.companiaInicial,
-    required this.catalogo,
-  });
+  const SelectorServiciosModal({super.key, this.categoria, this.companiaInicial, required this.catalogo});
 
   final CategoriaServicio? categoria;
   final CompaniaServicio? companiaInicial;
@@ -31,10 +25,7 @@ class SelectorServiciosModal extends StatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => SelectorServiciosModal(
-        categoria: categoria,
-        catalogo: catalogo,
-      ),
+      builder: (_) => SelectorServiciosModal(categoria: categoria, catalogo: catalogo),
     );
   }
 
@@ -47,10 +38,7 @@ class SelectorServiciosModal extends StatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => SelectorServiciosModal(
-        companiaInicial: compania,
-        catalogo: catalogo,
-      ),
+      builder: (_) => SelectorServiciosModal(companiaInicial: compania, catalogo: catalogo),
     );
   }
 
@@ -101,10 +89,7 @@ class _SelectorServiciosModalState extends State<SelectorServiciosModal> {
                 margin: const EdgeInsets.only(top: 12, bottom: 8),
                 width: 40,
                 height: 4,
-                decoration: BoxDecoration(
-                  color: scheme.outlineVariant,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+                decoration: BoxDecoration(color: scheme.outlineVariant, borderRadius: BorderRadius.circular(2)),
               ),
             ),
 
@@ -130,18 +115,10 @@ class _SelectorServiciosModalState extends State<SelectorServiciosModal> {
                         color: widget.categoria!.color.withValues(alpha: 0.12),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(
-                        widget.categoria!.icono,
-                        color: widget.categoria!.color,
-                        size: 20,
-                      ),
+                      child: Icon(widget.categoria!.icono, color: widget.categoria!.color, size: 20),
                     )
                   else if (_companiaSeleccionada != null)
-                    BrandMark(
-                      servicio: _companiaSeleccionada!.nombre,
-                      tamano: 36,
-                      radio: 10,
-                    ),
+                    BrandMark(servicio: _companiaSeleccionada!.nombre, tamano: 36, radio: 10),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
@@ -151,9 +128,7 @@ class _SelectorServiciosModalState extends State<SelectorServiciosModal> {
                           _companiaSeleccionada != null
                               ? _companiaSeleccionada!.nombre
                               : (widget.categoria?.titulo ?? 'Servicios'),
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w800,
-                              ),
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -161,17 +136,12 @@ class _SelectorServiciosModalState extends State<SelectorServiciosModal> {
                           _companiaSeleccionada != null
                               ? '${_companiaSeleccionada!.productos.length} opciones disponibles'
                               : 'Selecciona una compañía',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: scheme.onSurfaceVariant,
-                              ),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
                         ),
                       ],
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
+                  IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.of(context).pop()),
                 ],
               ),
             ),
@@ -265,11 +235,7 @@ class _VistaCompaniasCategoria extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  BrandMark(
-                    servicio: comp.nombre,
-                    tamano: 46,
-                    radio: 14,
-                  ),
+                  BrandMark(servicio: comp.nombre, tamano: 46, radio: 14),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(
@@ -277,26 +243,17 @@ class _VistaCompaniasCategoria extends StatelessWidget {
                       children: [
                         Text(
                           comp.nombre,
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          totalOpciones > 1
-                              ? '$totalOpciones paquetes / montos disponibles'
-                              : 'Pago directo',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: scheme.onSurfaceVariant,
-                              ),
+                          totalOpciones > 1 ? '$totalOpciones paquetes / montos disponibles' : 'Pago directo',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
                         ),
                       ],
                     ),
                   ),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    color: scheme.onSurfaceVariant,
-                  ),
+                  Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
                 ],
               ),
             ),
@@ -403,9 +360,7 @@ class _VistaProductosCompaniaState extends State<_VistaProductosCompania> {
                     backgroundColor: scheme.surfaceContainerHighest.withValues(alpha: 0.5),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
-                      side: BorderSide(
-                        color: activo ? scheme.primary : scheme.outline,
-                      ),
+                      side: BorderSide(color: activo ? scheme.primary : scheme.outline),
                     ),
                     onSelected: (_) {
                       setState(() {
@@ -431,10 +386,7 @@ class _VistaProductosCompaniaState extends State<_VistaProductosCompania> {
                       children: [
                         Icon(Icons.search_off_rounded, size: 40, color: scheme.outline),
                         const SizedBox(height: 8),
-                        Text(
-                          'No hay opciones que coincidan.',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
+                        Text('No hay opciones que coincidan.', style: Theme.of(context).textTheme.bodyMedium),
                       ],
                     ),
                   ),
@@ -447,10 +399,11 @@ class _VistaProductosCompaniaState extends State<_VistaProductosCompania> {
                     final prod = productosFiltrados[index];
                     final precioNum = double.tryParse(prod.precio) ?? 0.0;
                     final tieneDescripcion = prod.legend != null && prod.legend!.trim().isNotEmpty;
-                    final precioEnTitulo = precioNum > 0 &&
+                    final precioEnTitulo =
+                        precioNum > 0 &&
                         (prod.producto.contains('\$${precioNum.toInt()}') ||
-                         prod.producto.contains('\$${prod.precio}') ||
-                         RegExp(r'\b' + precioNum.toInt().toString() + r'\b').hasMatch(prod.producto));
+                            prod.producto.contains('\$${prod.precio}') ||
+                            RegExp(r'\b' + precioNum.toInt().toString() + r'\b').hasMatch(prod.producto));
 
                     return Material(
                       color: scheme.surface,
@@ -481,11 +434,8 @@ class _VistaProductosCompaniaState extends State<_VistaProductosCompania> {
                                   children: [
                                     Text(
                                       prod.producto,
-                                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 14.5,
-                                            height: 1.25,
-                                          ),
+                                      style: Theme.of(context).textTheme.titleSmall
+                                          ?.copyWith(fontWeight: FontWeight.w700, fontSize: 14.5, height: 1.25),
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -494,11 +444,8 @@ class _VistaProductosCompaniaState extends State<_VistaProductosCompania> {
                                       tieneDescripcion
                                           ? prod.legend!.trim()
                                           : (prod.esPrecioFinal ? 'Recarga prepago' : 'Pago de servicio'),
-                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                            color: scheme.onSurfaceVariant,
-                                            fontSize: 12.5,
-                                            height: 1.25,
-                                          ),
+                                      style: Theme.of(context).textTheme.bodySmall
+                                          ?.copyWith(color: scheme.onSurfaceVariant, fontSize: 12.5, height: 1.25),
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -519,10 +466,10 @@ class _VistaProductosCompaniaState extends State<_VistaProductosCompania> {
                                       child: MoneyText(
                                         monto: prod.precio,
                                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                              fontWeight: FontWeight.w800,
-                                              color: scheme.primary,
-                                              fontSize: 16,
-                                            ),
+                                          fontWeight: FontWeight.w800,
+                                          color: scheme.primary,
+                                          fontSize: 16,
+                                        ),
                                         negritas: true,
                                       ),
                                     ),

@@ -4,23 +4,21 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/application/session_controller.dart';
 import '../../features/auth/presentation/login_screen.dart';
-import '../../features/auth/presentation/register_screen.dart';
+import '../../features/auth/presentation/mfa_screen.dart';
 import '../../features/auth/presentation/splash_screen.dart';
 import '../../features/catalogo/presentation/inicio_screen.dart';
 import '../../features/pagos/presentation/comprobante_screen.dart';
 import '../../features/pagos/presentation/historial_screen.dart';
 import '../../features/pagos/presentation/pago_screen.dart';
-import '../../features/persona/presentation/perfil_screen.dart';
+import '../../features/perfil/presentation/perfil_screen.dart';
+import '../../features/registro/presentation/registro_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 /// Notifica al router cuando cambia el estado de sesión para re-evaluar redirecciones.
 class _AuthRouterListenable extends ChangeNotifier {
   _AuthRouterListenable(Ref ref) {
-    ref.listen<SessionState>(
-      sessionControllerProvider,
-      (_, _) => notifyListeners(),
-    );
+    ref.listen<SessionState>(sessionControllerProvider, (_, _) => notifyListeners());
   }
 }
 
@@ -35,7 +33,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final status = ref.read(sessionControllerProvider).status;
       final loc = state.matchedLocation;
-      final enAuth = loc == '/login' || loc == '/register';
+      final enAuth = loc == '/login' || loc == '/login/mfa' || loc == '/register';
       switch (status) {
         case SessionStatus.unknown:
           return loc == '/splash' ? null : '/splash';
@@ -46,45 +44,31 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       }
     },
     routes: [
-      GoRoute(
-        path: '/splash',
-        builder: (_, _) => const SplashScreen(),
-      ),
+      GoRoute(path: '/splash', builder: (_, _) => const SplashScreen()),
       GoRoute(
         path: '/login',
-        builder: (_, _) => const LoginScreen(),
+        builder: (_, state) => LoginScreen(correoInicial: state.extra is String ? state.extra! as String : null),
+        routes: [
+          // Segundo factor: solo se llega con el desafío emitido por el primer paso.
+          GoRoute(
+            path: 'mfa',
+            redirect: (_, state) => state.extra is MfaArgs ? null : '/login',
+            builder: (_, state) => MfaScreen(args: state.extra! as MfaArgs),
+          ),
+        ],
       ),
-      GoRoute(
-        path: '/register',
-        builder: (_, _) => const RegisterScreen(),
-      ),
+      GoRoute(path: '/register', builder: (_, _) => const RegistroScreen()),
       StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) =>
-            _AppShell(navigationShell: navigationShell),
+        builder: (context, state, navigationShell) => _AppShell(navigationShell: navigationShell),
         branches: [
           StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/home',
-                builder: (_, _) => const InicioScreen(),
-              ),
-            ],
+            routes: [GoRoute(path: '/home', builder: (_, _) => const InicioScreen())],
           ),
           StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/historial',
-                builder: (_, _) => const HistorialScreen(),
-              ),
-            ],
+            routes: [GoRoute(path: '/historial', builder: (_, _) => const HistorialScreen())],
           ),
           StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/perfil',
-                builder: (_, _) => const PerfilScreen(),
-              ),
-            ],
+            routes: [GoRoute(path: '/perfil', builder: (_, _) => const PerfilScreen())],
           ),
         ],
       ),
@@ -100,9 +84,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/comprobante/:id',
         parentNavigatorKey: _rootNavigatorKey,
-        builder: (context, state) => ComprobanteScreen(
-          transaccionId: int.parse(state.pathParameters['id']!),
-        ),
+        builder: (context, state) => ComprobanteScreen(transaccionId: int.parse(state.pathParameters['id']!)),
       ),
     ],
   );
@@ -122,10 +104,8 @@ class _AppShell extends StatelessWidget {
       body: navigationShell,
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
-        onDestinationSelected: (index) => navigationShell.goBranch(
-          index,
-          initialLocation: index == navigationShell.currentIndex,
-        ),
+        onDestinationSelected: (index) =>
+            navigationShell.goBranch(index, initialLocation: index == navigationShell.currentIndex),
         destinations: [
           NavigationDestination(
             icon: const Icon(Icons.home_outlined),

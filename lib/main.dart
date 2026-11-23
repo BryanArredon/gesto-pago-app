@@ -11,17 +11,10 @@ void main() {
   final container = ProviderContainer();
   // Vincula los puentes de red una sola vez: evita las referencias circulares
   // estáticas entre ApiClient y AuthRepository/SessionController.
-  container.read(tokenRefresherBridgeProvider).bind(
-        () => container.read(authRepositoryProvider),
-      );
-  container.read(sessionExpiredBridgeProvider).bind(
-        () => container.read(sessionControllerProvider.notifier).onSessionExpired(),
-      );
+  container.read(tokenRefresherBridgeProvider).bind(() => container.read(authRepositoryProvider));
+  container
+      .read(sessionExpiredBridgeProvider)
+      .bind((motivo) => container.read(sessionControllerProvider.notifier).onSessionExpired(motivo));
 
-  runApp(
-    UncontrolledProviderScope(
-      container: container,
-      child: const GestoPagoApp(),
-    ),
-  );
+  runApp(UncontrolledProviderScope(container: container, child: const GestoPagoApp()));
 }

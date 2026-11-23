@@ -3,12 +3,20 @@ import 'transaccion.dart';
 /// Parámetros para iniciar un pago de servicio.
 class PagoRequest {
   const PagoRequest({
+    required this.numeroCuenta,
+    required this.pinAutorizacion,
     required this.idServicio,
     required this.idProducto,
     required this.referencia,
     required this.monto,
     required this.idempotencyKey,
   });
+
+  /// Cuenta bancaria de 10 dígitos (onboarding-clientes) de la que se paga.
+  final String numeroCuenta;
+
+  /// PIN de 4 dígitos que autoriza la retención de saldo. Nunca se persiste.
+  final String pinAutorizacion;
 
   final int idServicio;
   final int idProducto;
@@ -20,12 +28,19 @@ class PagoRequest {
   final String idempotencyKey;
 
   Map<String, dynamic> toJson() => {
-        'idServicio': idServicio,
-        'idProducto': idProducto,
-        'referencia': referencia,
-        'monto': monto,
-        'idempotencyKey': idempotencyKey,
-      };
+    'numeroCuenta': numeroCuenta,
+    'pinAutorizacion': pinAutorizacion,
+    'idServicio': idServicio,
+    'idProducto': idProducto,
+    'referencia': referencia,
+    'monto': monto,
+    'idempotencyKey': idempotencyKey,
+  };
+
+  @override
+  String toString() =>
+      'PagoRequest(cuenta: ****${numeroCuenta.length >= 4 ? numeroCuenta.substring(numeroCuenta.length - 4) : ''}, '
+      'pin: ****, servicio: $idServicio, producto: $idProducto, monto: $monto)';
 }
 
 abstract interface class PagosRepository {

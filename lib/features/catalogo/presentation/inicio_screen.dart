@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/theme/gp_assets.dart';
-import '../../../core/theme/gp_colors.dart';
 import '../../../core/theme/gp_theme.dart';
 import '../../../core/widgets/app_empty_view.dart';
 import '../../../core/widgets/app_error_view.dart';
@@ -11,6 +9,8 @@ import '../../../core/widgets/app_loading_view.dart';
 import '../../../core/widgets/brand_mark.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../auth/application/session_controller.dart';
+import '../../cuenta/application/cuenta_providers.dart';
+import '../../cuenta/presentation/tarjeta_saldo.dart';
 import '../../pagos/application/pago_controller.dart';
 import '../../pagos/domain/transaccion.dart';
 import '../application/catalogo_controller.dart';
@@ -39,8 +39,7 @@ class _InicioScreenState extends ConsumerState<InicioScreen> {
   }
 
   String _iniciales(String nombre) {
-    final partes =
-        nombre.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
+    final partes = nombre.trim().split(RegExp(r'\s+')).where((p) => p.isNotEmpty).toList();
     if (partes.isEmpty) {
       return 'GP';
     }
@@ -55,11 +54,11 @@ class _InicioScreenState extends ConsumerState<InicioScreen> {
     final l = AppLocalizations.of(context);
     final sesion = ref.watch(sessionControllerProvider);
     final catalogo = ref.watch(catalogoControllerProvider);
+    // Carga los datos del cliente: completa el nombre del saludo.
+    ref.watch(clienteDetalleProvider);
 
     final nombreSesion = sesion.session?.nombre;
-    final nombre = (nombreSesion != null && nombreSesion.trim().isNotEmpty)
-        ? nombreSesion
-        : null;
+    final nombre = (nombreSesion != null && nombreSesion.trim().isNotEmpty) ? nombreSesion : null;
 
     return Scaffold(
       body: SafeArea(
@@ -68,11 +67,7 @@ class _InicioScreenState extends ConsumerState<InicioScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(GpSpacing.page, 12, GpSpacing.page, 12),
-              child: _BannerInicio(
-                nombre: nombre,
-                mostrarSaludo: nombre != null,
-                onIniciales: _iniciales,
-              ),
+              child: _BannerInicio(nombre: nombre, mostrarSaludo: nombre != null, onIniciales: _iniciales),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(GpSpacing.page, 4, GpSpacing.page, 12),
@@ -113,10 +108,8 @@ class _InicioScreenState extends ConsumerState<InicioScreen> {
               ),
             ),
             catalogo.when(
-              data: (productos) => _ContenidoCatalogo(
-                productos: productos,
-                busqueda: _searchController.text.trim().toLowerCase(),
-              ),
+              data: (productos) =>
+                  _ContenidoCatalogo(productos: productos, busqueda: _searchController.text.trim().toLowerCase()),
               loading: () => const Expanded(child: AppLoadingView()),
               error: (error, stack) => Expanded(
                 child: AppErrorView(
@@ -135,10 +128,7 @@ class _InicioScreenState extends ConsumerState<InicioScreen> {
 /// Contenido principal: Búsqueda activa O vista estructurada con Categorías,
 /// Marcas más usadas y Actividad reciente.
 class _ContenidoCatalogo extends ConsumerStatefulWidget {
-  const _ContenidoCatalogo({
-    required this.productos,
-    required this.busqueda,
-  });
+  const _ContenidoCatalogo({required this.productos, required this.busqueda});
 
   final List<CatalogoProducto> productos;
   final String busqueda;
@@ -152,8 +142,7 @@ class _ContenidoCatalogoState extends ConsumerState<_ContenidoCatalogo> {
     final query = widget.busqueda.trim().toLowerCase();
     if (query.isEmpty) return const [];
     return widget.productos.where((p) {
-      return p.producto.toLowerCase().contains(query) ||
-          p.servicio.toLowerCase().contains(query);
+      return p.producto.toLowerCase().contains(query) || p.servicio.toLowerCase().contains(query);
     }).toList();
   }
 
@@ -175,16 +164,13 @@ class _ContenidoCatalogoState extends ConsumerState<_ContenidoCatalogo> {
                 children: [
                   Text(
                     'Resultados para "$query"',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   const Spacer(),
                   Text(
                     '${resultados.length} encontrados',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                    style: Theme.of(context).textTheme.bodySmall
+                        ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
                   ),
                 ],
               ),
@@ -195,21 +181,14 @@ class _ContenidoCatalogoState extends ConsumerState<_ContenidoCatalogo> {
               Expanded(
                 child: ListView.separated(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(
-                    GpSpacing.page,
-                    4,
-                    GpSpacing.page,
-                    24,
-                  ),
+                  padding: const EdgeInsets.fromLTRB(GpSpacing.page, 4, GpSpacing.page, 24),
                   itemCount: resultados.length,
                   separatorBuilder: (_, _) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {
                     final producto = resultados[index];
                     return ServicioCard(
                       producto: producto,
-                      onTap: () => context.push(
-                        '/pago/${producto.idServicio}/${producto.idProducto}',
-                      ),
+                      onTap: () => context.push('/pago/${producto.idServicio}/${producto.idProducto}'),
                     );
                   },
                 ),
@@ -222,25 +201,26 @@ class _ContenidoCatalogoState extends ConsumerState<_ContenidoCatalogo> {
     // 2. Vista principal optimizada (sin lista pesada de 500 productos)
     final frecuentes = productosFrecuentes(widget.productos);
     final historial = ref.watch(historialControllerProvider);
-    final ultimasTransacciones = historial.value?.take(3).toList() ?? [];
+    final ultimasTransacciones = historial.value?.where((t) => t.esAprobada).take(3).toList() ?? [];
 
     return Expanded(
       child: RefreshIndicator(
-        onRefresh: () => ref.read(catalogoControllerProvider.notifier).refresh(),
+        onRefresh: () {
+          ref.invalidate(cuentaActivaProvider);
+          return ref.read(catalogoControllerProvider.notifier).refresh();
+        },
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 28),
           children: [
+            const Padding(padding: EdgeInsets.fromLTRB(GpSpacing.page, 4, GpSpacing.page, 8), child: TarjetaSaldo()),
             // Categorías de servicios (Grid visual)
             _EncabezadoSeccion(titulo: 'Categorías de servicios'),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: GpSpacing.page),
               child: _GridCategorias(
-                onSeleccionar: (cat) => SelectorServiciosModal.mostrarCategoria(
-                  context,
-                  categoria: cat,
-                  catalogo: widget.productos,
-                ),
+                onSeleccionar: (cat) =>
+                    SelectorServiciosModal.mostrarCategoria(context, categoria: cat, catalogo: widget.productos),
               ),
             ),
 
@@ -255,20 +235,11 @@ class _ContenidoCatalogoState extends ConsumerState<_ContenidoCatalogo> {
                       titulo: producto.servicio,
                       servicio: producto.servicio,
                       onTap: () {
-                        final comp = obtenerCompaniaPorNombre(
-                          widget.productos,
-                          producto.servicio,
-                        );
+                        final comp = obtenerCompaniaPorNombre(widget.productos, producto.servicio);
                         if (comp != null && comp.productos.length > 1) {
-                          SelectorServiciosModal.mostrarCompania(
-                            context,
-                            compania: comp,
-                            catalogo: widget.productos,
-                          );
+                          SelectorServiciosModal.mostrarCompania(context, compania: comp, catalogo: widget.productos);
                         } else {
-                          context.push(
-                            '/pago/${producto.idServicio}/${producto.idProducto}',
-                          );
+                          context.push('/pago/${producto.idServicio}/${producto.idProducto}');
                         }
                       },
                     ),
@@ -281,10 +252,7 @@ class _ContenidoCatalogoState extends ConsumerState<_ContenidoCatalogo> {
             _EncabezadoSeccion(
               titulo: 'Actividad reciente',
               accion: ultimasTransacciones.isNotEmpty
-                  ? TextButton(
-                      onPressed: () => context.go('/historial'),
-                      child: const Text('Ver historial'),
-                    )
+                  ? TextButton(onPressed: () => context.go('/historial'), child: const Text('Ver historial'))
                   : null,
             ),
             if (ultimasTransacciones.isEmpty)
@@ -299,11 +267,7 @@ class _ContenidoCatalogoState extends ConsumerState<_ContenidoCatalogo> {
                   ),
                   child: Row(
                     children: [
-                      Icon(
-                        Icons.receipt_long_outlined,
-                        size: 36,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
+                      Icon(Icons.receipt_long_outlined, size: 36, color: Theme.of(context).colorScheme.primary),
                       const SizedBox(width: 16),
                       Expanded(
                         child: Column(
@@ -311,9 +275,7 @@ class _ContenidoCatalogoState extends ConsumerState<_ContenidoCatalogo> {
                           children: [
                             Text(
                               'Sin pagos recientes',
-                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                              style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(height: 2),
                             Text(
@@ -384,11 +346,7 @@ class _GridCategorias extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: scheme.outline),
                 boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.04),
-                    blurRadius: 10,
-                    offset: const Offset(0, 3),
-                  ),
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 3)),
                 ],
               ),
               child: Column(
@@ -396,19 +354,13 @@ class _GridCategorias extends StatelessWidget {
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: cat.color.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
-                    ),
+                    decoration: BoxDecoration(color: cat.color.withValues(alpha: 0.12), shape: BoxShape.circle),
                     child: Icon(cat.icono, color: cat.color, size: 24),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     cat.titulo,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600, fontSize: 12),
                     textAlign: TextAlign.center,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -425,10 +377,7 @@ class _GridCategorias extends StatelessWidget {
 
 /// Tarjeta limpia para los últimos pagos en la pantalla principal
 class _TarjetaPagoReciente extends StatelessWidget {
-  const _TarjetaPagoReciente({
-    required this.transaccion,
-    required this.onTap,
-  });
+  const _TarjetaPagoReciente({required this.transaccion, required this.onTap});
 
   final Transaccion transaccion;
   final VoidCallback onTap;
@@ -449,20 +398,12 @@ class _TarjetaPagoReciente extends StatelessWidget {
             borderRadius: BorderRadius.circular(GpRadii.tarjeta),
             border: Border.all(color: scheme.outline),
             boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
+              BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 4)),
             ],
           ),
           child: Row(
             children: [
-              BrandMark(
-                servicio: transaccion.servicio,
-                tamano: 44,
-                radio: 13,
-              ),
+              BrandMark(servicio: transaccion.servicio, tamano: 44, radio: 13),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -470,18 +411,14 @@ class _TarjetaPagoReciente extends StatelessWidget {
                   children: [
                     Text(
                       transaccion.producto,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
                     Text(
                       'Ref. ${transaccion.referencia}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -494,10 +431,8 @@ class _TarjetaPagoReciente extends StatelessWidget {
                 children: [
                   Text(
                     '\$${transaccion.monto}',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: scheme.primary,
-                        ),
+                    style: Theme.of(context).textTheme.titleSmall
+                        ?.copyWith(fontWeight: FontWeight.w800, color: scheme.primary),
                   ),
                   const SizedBox(height: 2),
                   const Icon(Icons.chevron_right, size: 18, color: Colors.grey),
@@ -524,13 +459,8 @@ class _EncabezadoSeccion extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            titulo,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-          ),
-          if (accion != null) accion!,
+          Text(titulo, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+          ?accion,
         ],
       ),
     );
@@ -558,11 +488,7 @@ class _FilaAccesoRapido extends StatelessWidget {
 }
 
 class _TarjetaAcceso extends StatelessWidget {
-  const _TarjetaAcceso({
-    required this.titulo,
-    required this.servicio,
-    required this.onTap,
-  });
+  const _TarjetaAcceso({required this.titulo, required this.servicio, required this.onTap});
 
   final String titulo;
   final String servicio;
@@ -594,11 +520,7 @@ class _TarjetaAcceso extends StatelessWidget {
 }
 
 class _BannerInicio extends StatelessWidget {
-  const _BannerInicio({
-    required this.nombre,
-    required this.mostrarSaludo,
-    required this.onIniciales,
-  });
+  const _BannerInicio({required this.nombre, required this.mostrarSaludo, required this.onIniciales});
 
   final String? nombre;
   final bool mostrarSaludo;
@@ -618,11 +540,7 @@ class _BannerInicio extends StatelessWidget {
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF0F172A),
-              Color(0xFF1E3A8A),
-              Color(0xFF1D4ED8),
-            ],
+            colors: [Color(0xFF0F172A), Color(0xFF1E3A8A), Color(0xFF1D4ED8)],
             stops: [0.0, 0.55, 1.0],
           ),
           boxShadow: [
@@ -644,12 +562,7 @@ class _BannerInicio extends StatelessWidget {
                 height: 160,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      Colors.white.withValues(alpha: 0.12),
-                      Colors.transparent,
-                    ],
-                  ),
+                  gradient: RadialGradient(colors: [Colors.white.withValues(alpha: 0.12), Colors.transparent]),
                 ),
               ),
             ),
@@ -662,10 +575,7 @@ class _BannerInicio extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
-                    colors: [
-                      const Color(0xFF38BDF8).withValues(alpha: 0.15),
-                      Colors.transparent,
-                    ],
+                    colors: [const Color(0xFF38BDF8).withValues(alpha: 0.15), Colors.transparent],
                   ),
                 ),
               ),
@@ -684,11 +594,7 @@ class _BannerInicio extends StatelessWidget {
                           backgroundColor: Colors.white,
                           child: Text(
                             onIniciales(nombre!),
-                            style: TextStyle(
-                              color: scheme.primary,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 16,
-                            ),
+                            style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w800, fontSize: 16),
                           ),
                         ),
                     ],
@@ -706,13 +612,7 @@ class _BannerInicio extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      l.homeWelcome,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                      ),
-                    ),
+                    Text(l.homeWelcome, style: const TextStyle(color: Colors.white70, fontSize: 14)),
                   ] else ...[
                     Text(
                       l.homeWelcome,
@@ -724,13 +624,7 @@ class _BannerInicio extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      l.homeCatalog,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                      ),
-                    ),
+                    Text(l.homeCatalog, style: const TextStyle(color: Colors.white70, fontSize: 14)),
                   ],
                 ],
               ),

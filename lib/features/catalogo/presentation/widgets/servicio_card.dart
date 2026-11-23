@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../../../core/theme/gp_theme.dart';
 import '../../../../../core/widgets/brand_mark.dart';
 import '../../../../../core/widgets/money_text.dart';
-import '../../../../l10n/app_localizations.dart';
 import '../../domain/catalogo_producto.dart';
 
 /// Tarjeta de un producto/servicio del catálogo con logo de marca.
@@ -15,14 +14,14 @@ class ServicioCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
     final scheme = Theme.of(context).colorScheme;
 
     final precioNum = double.tryParse(producto.precio) ?? 0.0;
-    final precioEnTitulo = precioNum > 0 &&
+    final precioEnTitulo =
+        precioNum > 0 &&
         (producto.producto.contains('\$${precioNum.toInt()}') ||
-         producto.producto.contains('\$${producto.precio}') ||
-         RegExp(r'\b' + precioNum.toInt().toString() + r'\b').hasMatch(producto.producto));
+            producto.producto.contains('\$${producto.precio}') ||
+            RegExp(r'\b' + precioNum.toInt().toString() + r'\b').hasMatch(producto.producto));
 
     return Material(
       color: scheme.surface,
@@ -37,21 +36,12 @@ class ServicioCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(GpRadii.tarjeta),
             border: Border.all(color: scheme.outline),
             boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
-              ),
+              BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 16, offset: const Offset(0, 6)),
             ],
           ),
           child: Row(
             children: [
-              BrandMark(
-                servicio: producto.servicio,
-                categoria: producto.idCatTipoServicio,
-                tamano: 52,
-                radio: 15,
-              ),
+              BrandMark(servicio: producto.servicio, categoria: producto.idCatTipoServicio, tamano: 52, radio: 15),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
@@ -59,18 +49,14 @@ class ServicioCard extends StatelessWidget {
                   children: [
                     Text(
                       producto.producto,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
                     Text(
                       producto.servicio,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -86,10 +72,8 @@ class ServicioCard extends StatelessWidget {
                       padding: const EdgeInsets.only(right: 6),
                       child: MoneyText(
                         monto: producto.precio,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              color: scheme.primary,
-                            ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800, color: scheme.primary),
                         negritas: true,
                       ),
                     ),

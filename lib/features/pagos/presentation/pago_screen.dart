@@ -11,6 +11,9 @@ import '../../../core/widgets/money_text.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../catalogo/application/catalogo_controller.dart';
 import '../../catalogo/domain/catalogo_producto.dart';
+import '../../cuenta/application/cuenta_providers.dart';
+import '../../cuenta/domain/cuenta.dart';
+import 'widgets/pin_autorizacion_sheet.dart';
 import '../application/pago_controller.dart';
 
 /// Captura los datos del pago, verifica contra el proveedor y lo ejecuta.
@@ -56,15 +59,10 @@ class _PagoScreenState extends ConsumerState<PagoScreen> {
     }
     final referencia = _referenciaController.text.trim();
     if (referencia.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.pagoReferenceRequired)),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.pagoReferenceRequired)));
       return;
     }
-    await ref.read(pagoControllerProvider.notifier).verificarReferencia(
-          producto: producto,
-          referencia: referencia,
-        );
+    await ref.read(pagoControllerProvider.notifier).verificarReferencia(producto: producto, referencia: referencia);
     final estado = ref.read(pagoControllerProvider);
     if (estado.verificacion?.valida == true && estado.verificacion?.monto != null) {
       if (_montoController.text.trim().isEmpty) {
@@ -81,17 +79,19 @@ class _PagoScreenState extends ConsumerState<PagoScreen> {
     }
     final referencia = _referenciaController.text.trim();
     if (referencia.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.pagoReferenceRequired)),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.pagoReferenceRequired)));
       return;
     }
 
     final monto = producto.esPagoServicio ? _montoController.text.trim() : producto.precio;
     if (monto.isEmpty || (double.tryParse(monto) ?? 0) <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.pagoInvalidAmount)),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.pagoInvalidAmount)));
+      return;
+    }
+
+    final cuenta = ref.read(cuentaActivaProvider).value;
+    if (cuenta == null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.pagoNoAccount)));
       return;
     }
 
@@ -103,13 +103,7 @@ class _PagoScreenState extends ConsumerState<PagoScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              l.pagoConfirmMessage(
-                producto.producto,
-                referencia,
-                GpMoney.format(monto),
-              ),
-            ),
+            Text(l.pagoConfirmMessage(producto.producto, referencia, GpMoney.format(monto))),
             const SizedBox(height: 8),
             _Fila(label: l.pagoConfirmService, valor: producto.servicio),
             _Fila(label: l.pagoConfirmReference, valor: referencia),
@@ -117,14 +111,8 @@ class _PagoScreenState extends ConsumerState<PagoScreen> {
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(l.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(l.pagoConfirmButton),
-          ),
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(l.commonCancel)),
+          FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: Text(l.pagoConfirmButton)),
         ],
       ),
     );
@@ -132,24 +120,26 @@ class _PagoScreenState extends ConsumerState<PagoScreen> {
       return;
     }
 
-    // Pantalla de proceso no cerrable: el envío no debe interrumpirse.
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const _ProcesandoDialog(),
-    );
+    // Autenticación reforzada para mover dinero: el PIN autoriza la retención.
+    final pin = await pedirPinAutorizacion(context, cuenta: cuenta, monto: monto);
+    if (pin == null || !mounted) {
+      return;
+    }
 
-    await ref.read(pagoControllerProvider.notifier).pagar(
-          producto: producto,
-          referencia: referencia,
-          monto: monto,
-        );
+    // Pantalla de proceso no cerrable: el envío no debe interrumpirse.
+    showDialog<void>(context: context, barrierDismissible: false, builder: (_) => const _ProcesandoDialog());
+
+    await ref
+        .read(pagoControllerProvider.notifier)
+        .pagar(producto: producto, referencia: referencia, monto: monto, numeroCuenta: cuenta.numero, pin: pin);
 
     if (mounted) {
       Navigator.of(context).pop();
     }
     final estado = ref.read(pagoControllerProvider);
     if (estado.transaccion != null && mounted) {
+      // El saldo cambió: la tarjeta de inicio debe recargarse.
+      ref.invalidate(cuentaActivaProvider);
       context.go('/comprobante/${estado.transaccion!.id}');
     }
   }
@@ -181,17 +171,21 @@ class _PagoScreenState extends ConsumerState<PagoScreen> {
           padding: const EdgeInsets.all(GpSpacing.page),
           children: [
             _ProductoHeader(producto: producto),
+            const SizedBox(height: 16),
+            _CuentaCargo(cuenta: ref.watch(cuentaActivaProvider)),
             const SizedBox(height: 24),
             Text(l.pagoServiceLabel, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 10),
             TextField(
               controller: _referenciaController,
               enabled: !estado.estaOcupado,
-              keyboardType: TextInputType.number,
+              keyboardType: producto.tipoReferencia == 'a' ? TextInputType.phone : TextInputType.text,
+              maxLength: producto.tipoReferencia == 'a' ? 10 : 100,
               onSubmitted: (_) => _verificar(),
               decoration: InputDecoration(
-                labelText: l.pagoReferenceLabel,
+                labelText: _etiquetaReferencia(l, producto.tipoReferencia),
                 hintText: l.pagoReferenceHint,
+                counterText: '',
               ),
             ),
             const SizedBox(height: 16),
@@ -210,11 +204,7 @@ class _PagoScreenState extends ConsumerState<PagoScreen> {
               OutlinedButton.icon(
                 onPressed: estado.estaOcupado ? null : _verificar,
                 icon: estado.verificando
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
                     : const Icon(Icons.verified_user_outlined),
                 label: Text(l.pagoVerifyReference),
               ),
@@ -259,25 +249,14 @@ class _ProductoHeader extends StatelessWidget {
         color: scheme.surface,
         borderRadius: BorderRadius.circular(GpRadii.tarjeta),
         border: Border.all(color: scheme.outline),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 16, offset: const Offset(0, 6))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              BrandMark(
-                servicio: producto.servicio,
-                categoria: producto.idCatTipoServicio,
-                tamano: 54,
-                radio: 16,
-              ),
+              BrandMark(servicio: producto.servicio, categoria: producto.idCatTipoServicio, tamano: 54, radio: 16),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
@@ -285,16 +264,12 @@ class _ProductoHeader extends StatelessWidget {
                   children: [
                     Text(
                       producto.producto,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       producto.servicio,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
                     ),
                   ],
                 ),
@@ -310,16 +285,12 @@ class _ProductoHeader extends StatelessWidget {
                   children: [
                     Text(
                       l.catalogPrice,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
                     ),
                     MoneyText(
                       monto: producto.precio,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: scheme.primary,
-                            fontWeight: FontWeight.w900,
-                          ),
+                      style: Theme.of(context).textTheme.titleMedium
+                          ?.copyWith(color: scheme.primary, fontWeight: FontWeight.w900),
                       negritas: true,
                     ),
                   ],
@@ -334,30 +305,21 @@ class _ProductoHeader extends StatelessWidget {
               decoration: BoxDecoration(
                 color: scheme.surfaceContainerHighest.withValues(alpha: 0.6),
                 borderRadius: BorderRadius.circular(GpRadii.campo),
-                border: Border.all(
-                  color: scheme.outline,
-                ),
+                border: Border.all(color: scheme.outline),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
-                    child: Icon(
-                      Icons.info_outline_rounded,
-                      size: 16,
-                      color: scheme.primary,
-                    ),
+                    child: Icon(Icons.info_outline_rounded, size: 16, color: scheme.primary),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       producto.legend!.trim(),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurface,
-                            fontWeight: FontWeight.w500,
-                            height: 1.3,
-                          ),
+                      style: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(color: scheme.onSurface, fontWeight: FontWeight.w500, height: 1.3),
                     ),
                   ),
                 ],
@@ -389,23 +351,14 @@ class _EstadoVerificacion extends ConsumerWidget {
     return Container(
       margin: const EdgeInsets.only(top: 16),
       padding: const EdgeInsets.all(GpSpacing.md),
-      decoration: BoxDecoration(
-        color: colorFondo,
-        borderRadius: BorderRadius.circular(GpRadii.campo),
-      ),
+      decoration: BoxDecoration(color: colorFondo, borderRadius: BorderRadius.circular(GpRadii.campo)),
       child: Row(
         children: [
-          Icon(
-            valida ? Icons.check_circle : Icons.cancel,
-            color: colorTexto,
-            size: 22,
-          ),
+          Icon(valida ? Icons.check_circle : Icons.cancel, color: colorTexto, size: 22),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              valida
-                  ? (l.pagoValidReferenceMessage(verificacion.monto ?? '-'))
-                  : l.pagoVerifyInvalid,
+              valida ? (l.pagoValidReferenceMessage(verificacion.monto ?? '-')) : l.pagoVerifyInvalid,
               style: TextStyle(color: colorTexto, fontWeight: FontWeight.w600),
             ),
           ),
@@ -429,11 +382,7 @@ class _ProcesandoDialog extends StatelessWidget {
           const SizedBox(height: 24),
           Text(l.pagoEnviado, textAlign: TextAlign.center),
           const SizedBox(height: 8),
-          Text(
-            l.pagoDoNotDoubleSubmit,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
+          Text(l.pagoDoNotDoubleSubmit, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
     );
@@ -454,9 +403,7 @@ class _Fila extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: Theme.of(context).textTheme.bodySmall),
-          Flexible(
-            child: Text(valor, style: Theme.of(context).textTheme.bodyMedium),
-          ),
+          Flexible(child: Text(valor, style: Theme.of(context).textTheme.bodyMedium)),
         ],
       ),
     );
@@ -484,6 +431,59 @@ class _ErrorBanner extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(mensaje, style: TextStyle(color: scheme.error)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// tipoReferencia del catálogo: a = teléfono, b = cliente/contrato, c = código de barras.
+String _etiquetaReferencia(AppLocalizations l, String tipo) => switch (tipo.toLowerCase()) {
+  'a' => l.catalogReferenceTypeA,
+  'b' || 'ab' => l.catalogReferenceTypeB,
+  'c' || 'bc' => l.catalogReferenceTypeC,
+  _ => l.pagoReferenceLabel,
+};
+
+/// Cuenta de la que se cobrará el pago, con su saldo disponible.
+class _CuentaCargo extends StatelessWidget {
+  const _CuentaCargo({required this.cuenta});
+
+  final AsyncValue<Cuenta?> cuenta;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: GpSpacing.lg, vertical: GpSpacing.md),
+      decoration: BoxDecoration(
+        color: scheme.primary.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(GpRadii.tarjeta),
+        border: Border.all(color: scheme.primary.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.account_balance_wallet_outlined, color: scheme.primary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: cuenta.when(
+              loading: () => const LinearProgressIndicator(),
+              error: (_, _) => Text(l.inicioAccountError),
+              data: (c) => c == null
+                  ? Text(l.pagoNoAccount, style: TextStyle(color: scheme.error))
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('${l.pagoPayWith} ${c.enmascarada}', style: Theme.of(context).textTheme.titleSmall),
+                        Text(
+                          '${l.inicioBalance}: ${GpMoney.format(c.saldo)}',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+            ),
           ),
         ],
       ),

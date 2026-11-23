@@ -30,7 +30,10 @@ class HistorialScreen extends ConsumerWidget {
           message: l.historialError,
           onRetry: () => ref.read(historialControllerProvider.notifier).refresh(),
         ),
-        data: (transacciones) {
+        data: (todas) {
+          // Solo las operaciones confirmadas como exitosas (LIQUIDADO) son compras
+          // realizadas. Las demás siguen disponibles en su comprobante.
+          final transacciones = todas.where((t) => t.esAprobada).toList();
           if (transacciones.isEmpty) {
             return AppEmptyView(message: l.historialEmpty);
           }
@@ -43,10 +46,7 @@ class HistorialScreen extends ConsumerWidget {
               separatorBuilder: (_, _) => const SizedBox(height: 10),
               itemBuilder: (context, index) {
                 final tx = transacciones[index];
-                return _ItemHistorial(
-                  transaccion: tx,
-                  onTap: () => context.push('/comprobante/${tx.id}'),
-                );
+                return _ItemHistorial(transaccion: tx, onTap: () => context.push('/comprobante/${tx.id}'));
               },
             ),
           );
@@ -85,11 +85,7 @@ class _ItemHistorial extends ConsumerWidget {
             borderRadius: BorderRadius.circular(GpRadii.tarjeta),
             border: Border.all(color: scheme.outline),
             boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
-              ),
+              BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 16, offset: const Offset(0, 6)),
             ],
           ),
           child: Column(
@@ -97,11 +93,7 @@ class _ItemHistorial extends ConsumerWidget {
             children: [
               Row(
                 children: [
-                  BrandMark(
-                    servicio: transaccion.servicio,
-                    tamano: 40,
-                    radio: 12,
-                  ),
+                  BrandMark(servicio: transaccion.servicio, tamano: 40, radio: 12),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
@@ -112,10 +104,7 @@ class _ItemHistorial extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  EstadoTransaccionBadge(
-                    estado: transaccion.estado,
-                    label: etiquetaEstado,
-                  ),
+                  EstadoTransaccionBadge(estado: transaccion.estado, label: etiquetaEstado),
                 ],
               ),
               const SizedBox(height: 8),
@@ -125,21 +114,12 @@ class _ItemHistorial extends ConsumerWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Ref ${transaccion.referencia}',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
+                      Text('Ref ${transaccion.referencia}', style: Theme.of(context).textTheme.bodyMedium),
                       const SizedBox(height: 2),
-                      Text(
-                        formatFecha(transaccion.fecha),
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
+                      Text(formatFecha(transaccion.fecha), style: Theme.of(context).textTheme.bodySmall),
                     ],
                   ),
-                  MoneyText(
-                    monto: transaccion.monto,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
+                  MoneyText(monto: transaccion.monto, style: Theme.of(context).textTheme.titleMedium),
                 ],
               ),
             ],
