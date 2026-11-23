@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "appTitle": "Gesto Pago",
+  "appTitle": "GestoPago",
   "commonLoading": "Loading...",
   "commonRetry": "Retry",
   "commonCancel": "Cancel",
@@ -126,5 +126,213 @@
   "perfilThemeDark": "Dark",
   "perfilLogout": "Sign out",
   "perfilLogoutConfirm": "Sign out?",
-  "perfilLogoutConfirmMessage": "You will need your password to sign back in."
+  "perfilLogoutConfirmMessage": "You will need your password to sign back in.",
+  "loginContinue": "Continue",
+  "loginClosedRevoked": "Your session was closed because you signed in on another device.",
+  "loginClosedExpired": "Your session expired due to inactivity. Please sign in again.",
+  "loginClosedManual": "You signed out successfully.",
+  "loginUserInactive": "Your user is inactive. Contact your account executive.",
+  "loginLocked": "Your access is temporarily locked after failed attempts. Try again in 15 minutes.",
+  "mfaTitle": "Two-step verification",
+  "mfaEnrollTitle": "Turn on verification",
+  "mfaInstructions": "Open your authenticator app and enter the 6-digit Gesto Pago code.",
+  "mfaEnrollInstructions": "For your security, link an authenticator app (Google or Microsoft Authenticator). You only do this once and use it on mobile and web.",
+  "mfaOpenAuthenticator": "Open authenticator app",
+  "mfaCopyKey": "Copy key",
+  "mfaKeyCopied": "Key copied. Paste it into your authenticator app.",
+  "mfaManualKey": "Key for manual entry",
+  "mfaShowQr": "Show QR code",
+  "mfaQrHint": "Scan it with the authenticator app on another device.",
+  "mfaCodeLabel": "6-digit code",
+  "mfaVerify": "Verify and sign in",
+  "mfaInvalidCode": "Wrong or already used code. Wait for the next code.",
+  "mfaCodeIncomplete": "Enter the 6 digits from your authenticator app.",
+  "mfaExpired": "Verification expired. Enter your password again.",
+  "mfaExpiresIn": "This verification expires in {time}",
+  "@mfaExpiresIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "mfaNoAuthenticator": "No authenticator app found. Install Google Authenticator or Microsoft Authenticator, or copy the key.",
+  "mfaChangeAccount": "Use another account",
+  "sessionActiveTitle": "You already have an open session",
+  "sessionActiveWeb": "Active session on the web",
+  "sessionActiveMobile": "Active session on another phone",
+  "sessionActiveLastActivity": "Last activity: {date}",
+  "@sessionActiveLastActivity": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionActiveMessage": "For security you can only have one open session at a time. If you continue, the other session will be closed immediately.",
+  "sessionActiveNotYou": "Wasn't you? Cancel and change your password from a trusted device.",
+  "sessionActiveConfirm": "Close the other session and sign in",
+  "sessionActiveCancelled": "You did not sign in. Your other session is still open.",
+  "pagoPinTitle": "Authorize with your PIN",
+  "pagoPinMessage": "Enter the 4-digit PIN for your account {account}.",
+  "@pagoPinMessage": {
+    "placeholders": {
+      "account": {
+        "type": "String"
+      }
+    }
+  },
+  "pagoPinLabel": "Authorization PIN",
+  "pagoPinInvalid": "Wrong PIN. Check it and try again.",
+  "pagoPinFormat": "The PIN has 4 digits.",
+  "pagoNoAccount": "You have no active account to pay with.",
+  "pagoPayWith": "Pay with",
+  "pagoAuthorize": "Authorize payment",
+  "inicioBalance": "Available balance",
+  "inicioAccountType": "{type} account",
+  "@inicioAccountType": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "inicioShowBalance": "Show balance",
+  "inicioHideBalance": "Hide balance",
+  "inicioAccountError": "We couldn't load your account.",
+  "perfilSecurity": "Security",
+  "perfilTwoFactor": "Two-step verification",
+  "perfilTwoFactorActive": "On, with authenticator app",
+  "perfilSingleSession": "Single session",
+  "perfilSingleSessionDesc": "If you sign in on the web, this session will close.",
+  "perfilPin": "Purchase PIN",
+  "perfilPinConfigured": "Set",
+  "perfilPinPending": "Not set",
+  "perfilChangePin": "Change purchase PIN",
+  "perfilCurrentPassword": "Current password",
+  "perfilNewPin": "New PIN",
+  "perfilConfirmPin": "Confirm PIN",
+  "perfilPinMismatch": "PINs don't match.",
+  "perfilPinSaved": "PIN updated.",
+  "perfilWrongPassword": "The current password is wrong.",
+  "perfilPersonalData": "Personal data",
+  "perfilPhone": "Phone",
+  "perfilAddress": "Address",
+  "perfilLastAccess": "Last sign-in",
+  "perfilAccount": "Account",
+  "perfilLogoutServer": "Your session will be closed on the server. To sign in again you will need your password and verification code.",
+  "registroTitle": "Open your account",
+  "registroStepOf": "Step {current} of {total}",
+  "@registroStepOf": {
+    "placeholders": {
+      "current": {
+        "type": "String"
+      },
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "registroStepPersonal": "Personal data",
+  "registroStepContact": "Contact",
+  "registroStepAddress": "Address",
+  "registroStepWork": "Employment",
+  "registroStepAccess": "Access and account",
+  "registroStepReview": "Review",
+  "registroOptional": "{field} (optional)",
+  "@registroOptional": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "registroNombre": "First name",
+  "registroSegundoNombre": "Middle name",
+  "registroApellidoPaterno": "Paternal surname",
+  "registroApellidoMaterno": "Maternal surname",
+  "registroFechaNacimiento": "Date of birth",
+  "registroSexo": "Sex",
+  "registroSexoHombre": "Male",
+  "registroSexoMujer": "Female",
+  "registroSexoOtro": "Other",
+  "registroCurp": "CURP",
+  "registroRfc": "RFC with homoclave",
+  "registroNacionalidad": "Nationality",
+  "registroEstadoCivil": "Marital status",
+  "registroEcSoltero": "Single",
+  "registroEcCasado": "Married",
+  "registroEcDivorciado": "Divorced",
+  "registroEcViudo": "Widowed",
+  "registroEcUnionLibre": "Civil union",
+  "registroEcSeparado": "Separated",
+  "registroEcOtro": "Other",
+  "registroCorreo": "Email",
+  "registroCorreoAyuda": "It will be your sign-in username.",
+  "registroTelefono": "Mobile phone",
+  "registroTelefonoAlterno": "Alternate phone",
+  "registroCalle": "Street",
+  "registroNumExt": "Street number",
+  "registroNumInt": "Unit",
+  "registroColonia": "Neighborhood",
+  "registroCp": "Postal code",
+  "registroMunicipio": "Municipality",
+  "registroEstado": "State",
+  "registroPais": "Country",
+  "registroOcupacion": "Occupation",
+  "registroEmpresa": "Company",
+  "registroIngreso": "Monthly income (MXN)",
+  "registroContrasenia": "Password",
+  "registroConfirmar": "Confirm password",
+  "registroPin": "Purchase PIN (4 digits)",
+  "registroPinAyuda": "You'll use it to authorize each purchase.",
+  "registroTipoCuenta": "Account type",
+  "registroTcAhorro": "Savings",
+  "registroTcCorriente": "Checking",
+  "registroTcNomina": "Payroll",
+  "registroTcInversion": "Investment",
+  "registroReglaLongitud": "At least 8 characters",
+  "registroReglaMayuscula": "One uppercase letter",
+  "registroReglaMinuscula": "One lowercase letter",
+  "registroReglaNumero": "One number",
+  "registroReglaEspecial": "One special character",
+  "registroCuentaInfo": "Your ACTIVE bank account will be created with the system-assigned opening balance, along with your sign-in user.",
+  "registroTerminos": "I declare the information is true and accept the privacy notice.",
+  "registroTerminosRequerido": "You must accept the privacy notice.",
+  "registroAnterior": "Back",
+  "registroContinuar": "Continue",
+  "registroEnviar": "Open my account",
+  "registroEditar": "Edit",
+  "registroError": "We could not complete your registration",
+  "registroExitoTitulo": "Welcome, {name}!",
+  "@registroExitoTitulo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "registroExitoMensaje": "Your registration is complete and your account is ready.",
+  "registroExitoSiguiente": "When you sign in you will turn on two-step verification.",
+  "registroNumeroCuenta": "Account number",
+  "registroSaldoInicial": "Opening balance",
+  "registroUsuario": "Sign-in user",
+  "registroYaTengoCuenta": "I already have an account",
+  "campoObligatorio": "Required field",
+  "campoNombreInvalido": "Letters and spaces only (2 to 50).",
+  "campoLongitud": "Invalid length.",
+  "campoFechaFutura": "Cannot be a future date.",
+  "campoMenorDeEdad": "You must be over 18.",
+  "campoCurpInvalida": "Invalid CURP (18 characters).",
+  "campoRfcInvalido": "Invalid RFC (13 characters with homoclave).",
+  "campoCurpFecha": "The CURP date doesn't match your date of birth.",
+  "campoRfcFecha": "The RFC date doesn't match your date of birth.",
+  "campoCorreoInvalido": "Invalid email.",
+  "campoTelefonoInvalido": "Must have 10 digits.",
+  "campoCpInvalido": "Must have 5 digits.",
+  "campoIngresoInvalido": "Must be greater than zero (2 decimals max).",
+  "campoContraseniaDebil": "The password doesn't meet the requirements.",
+  "campoContraseniasDistintas": "Passwords don't match.",
+  "campoPinInvalido": "The PIN must have 4 digits.",
+  "campoPinesDistintos": "PINs don't match."
 }

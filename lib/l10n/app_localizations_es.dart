@@ -10,7 +10,7 @@ class AppLocalizationsEs extends AppLocalizations {
   AppLocalizationsEs([String locale = 'es']) : super(locale);
 
   @override
-  String get appTitle => 'Gesto Pago';
+  String get appTitle => 'GestoPago';
 
   @override
   String get commonLoading => 'Cargando...';
@@ -106,7 +106,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get loginCreateAccount => 'Crear cuenta';
 
   @override
-  String get registerTitle => 'Crear cuenta';
+  String get registerTitle => 'Abre tu cuenta';
 
   @override
   String get registerSubtitle => 'Regístrate para comenzar';
@@ -404,4 +404,511 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get perfilLogoutConfirmMessage =>
       'Necesitarás tu contraseña para volver a entrar.';
+
+  @override
+  String get loginContinue => 'Continuar';
+
+  @override
+  String get loginClosedRevoked =>
+      'Tu sesión se cerró porque se inició sesión en otro dispositivo.';
+
+  @override
+  String get loginClosedExpired =>
+      'Tu sesión expiró por inactividad. Inicia sesión de nuevo.';
+
+  @override
+  String get loginClosedManual => 'Cerraste sesión correctamente.';
+
+  @override
+  String get loginUserInactive =>
+      'Tu usuario está inactivo. Contacta a tu ejecutivo.';
+
+  @override
+  String get loginLocked =>
+      'Tu acceso está bloqueado temporalmente por intentos fallidos. Inténtalo en 15 minutos.';
+
+  @override
+  String get mfaTitle => 'Verificación en dos pasos';
+
+  @override
+  String get mfaEnrollTitle => 'Activa la verificación';
+
+  @override
+  String get mfaInstructions =>
+      'Abre tu app autenticadora y escribe el código de 6 dígitos de Gesto Pago.';
+
+  @override
+  String get mfaEnrollInstructions =>
+      'Por tu seguridad, vincula una app autenticadora (Google o Microsoft Authenticator). Solo se hace una vez y la usarás en el móvil y en la web.';
+
+  @override
+  String get mfaOpenAuthenticator => 'Abrir app autenticadora';
+
+  @override
+  String get mfaCopyKey => 'Copiar clave';
+
+  @override
+  String get mfaKeyCopied => 'Clave copiada. Pégala en tu app autenticadora.';
+
+  @override
+  String get mfaManualKey => 'Clave para captura manual';
+
+  @override
+  String get mfaShowQr => 'Mostrar código QR';
+
+  @override
+  String get mfaQrHint =>
+      'Escanéalo con la app autenticadora de otro dispositivo.';
+
+  @override
+  String get mfaCodeLabel => 'Código de 6 dígitos';
+
+  @override
+  String get mfaVerify => 'Verificar y entrar';
+
+  @override
+  String get mfaInvalidCode =>
+      'Código incorrecto o ya utilizado. Espera el siguiente código.';
+
+  @override
+  String get mfaCodeIncomplete =>
+      'Escribe los 6 dígitos de tu app autenticadora.';
+
+  @override
+  String get mfaExpired =>
+      'La verificación expiró. Ingresa tu contraseña de nuevo.';
+
+  @override
+  String mfaExpiresIn(String time) {
+    return 'Esta verificación vence en $time';
+  }
+
+  @override
+  String get mfaNoAuthenticator =>
+      'No encontramos una app autenticadora. Instala Google Authenticator o Microsoft Authenticator, o copia la clave.';
+
+  @override
+  String get mfaChangeAccount => 'Cambiar de cuenta';
+
+  @override
+  String get sessionActiveTitle => 'Ya tienes una sesión abierta';
+
+  @override
+  String get sessionActiveWeb => 'Sesión activa en la web';
+
+  @override
+  String get sessionActiveMobile => 'Sesión activa en otro teléfono';
+
+  @override
+  String sessionActiveLastActivity(String date) {
+    return 'Última actividad: $date';
+  }
+
+  @override
+  String get sessionActiveMessage =>
+      'Por seguridad solo puedes tener una sesión abierta a la vez. Si continúas, la otra sesión se cerrará de inmediato.';
+
+  @override
+  String get sessionActiveNotYou =>
+      '¿No fuiste tú? Cancela y cambia tu contraseña desde un dispositivo de confianza.';
+
+  @override
+  String get sessionActiveConfirm => 'Cerrar la otra sesión y entrar';
+
+  @override
+  String get sessionActiveCancelled =>
+      'No se inició sesión. Tu otra sesión sigue abierta.';
+
+  @override
+  String get pagoPinTitle => 'Autoriza con tu PIN';
+
+  @override
+  String pagoPinMessage(String account) {
+    return 'Escribe el PIN de 4 dígitos de tu cuenta $account.';
+  }
+
+  @override
+  String get pagoPinLabel => 'PIN de autorización';
+
+  @override
+  String get pagoPinInvalid =>
+      'PIN incorrecto. Verifícalo e inténtalo de nuevo.';
+
+  @override
+  String get pagoPinFormat => 'El PIN tiene 4 dígitos.';
+
+  @override
+  String get pagoNoAccount => 'No tienes una cuenta activa para pagar.';
+
+  @override
+  String get pagoPayWith => 'Pagar con';
+
+  @override
+  String get pagoAuthorize => 'Autorizar pago';
+
+  @override
+  String get inicioBalance => 'Saldo disponible';
+
+  @override
+  String inicioAccountType(String type) {
+    return 'Cuenta $type';
+  }
+
+  @override
+  String get inicioShowBalance => 'Mostrar saldo';
+
+  @override
+  String get inicioHideBalance => 'Ocultar saldo';
+
+  @override
+  String get inicioAccountError => 'No pudimos cargar tu cuenta.';
+
+  @override
+  String get perfilSecurity => 'Seguridad';
+
+  @override
+  String get perfilTwoFactor => 'Verificación en dos pasos';
+
+  @override
+  String get perfilTwoFactorActive => 'Activa con app autenticadora';
+
+  @override
+  String get perfilSingleSession => 'Sesión única';
+
+  @override
+  String get perfilSingleSessionDesc =>
+      'Si entras desde la web, esta sesión se cerrará.';
+
+  @override
+  String get perfilPin => 'PIN de compras';
+
+  @override
+  String get perfilPinConfigured => 'Configurado';
+
+  @override
+  String get perfilPinPending => 'Sin configurar';
+
+  @override
+  String get perfilChangePin => 'Cambiar PIN de compras';
+
+  @override
+  String get perfilCurrentPassword => 'Contraseña actual';
+
+  @override
+  String get perfilNewPin => 'Nuevo PIN';
+
+  @override
+  String get perfilConfirmPin => 'Confirmar PIN';
+
+  @override
+  String get perfilPinMismatch => 'Los PIN no coinciden.';
+
+  @override
+  String get perfilPinSaved => 'PIN actualizado.';
+
+  @override
+  String get perfilWrongPassword => 'La contraseña actual es incorrecta.';
+
+  @override
+  String get perfilPersonalData => 'Datos personales';
+
+  @override
+  String get perfilPhone => 'Teléfono';
+
+  @override
+  String get perfilAddress => 'Domicilio';
+
+  @override
+  String get perfilLastAccess => 'Último acceso';
+
+  @override
+  String get perfilAccount => 'Cuenta';
+
+  @override
+  String get perfilLogoutServer =>
+      'Tu sesión se cerrará en el servidor. Para volver a entrar necesitarás tu contraseña y tu código de verificación.';
+
+  @override
+  String get registroTitle => 'Abre tu cuenta';
+
+  @override
+  String registroStepOf(String current, String total) {
+    return 'Paso $current de $total';
+  }
+
+  @override
+  String get registroStepPersonal => 'Datos personales';
+
+  @override
+  String get registroStepContact => 'Contacto';
+
+  @override
+  String get registroStepAddress => 'Domicilio';
+
+  @override
+  String get registroStepWork => 'Información laboral';
+
+  @override
+  String get registroStepAccess => 'Acceso y cuenta';
+
+  @override
+  String get registroStepReview => 'Confirmación';
+
+  @override
+  String registroOptional(String field) {
+    return '$field (opcional)';
+  }
+
+  @override
+  String get registroNombre => 'Nombre';
+
+  @override
+  String get registroSegundoNombre => 'Segundo nombre';
+
+  @override
+  String get registroApellidoPaterno => 'Apellido paterno';
+
+  @override
+  String get registroApellidoMaterno => 'Apellido materno';
+
+  @override
+  String get registroFechaNacimiento => 'Fecha de nacimiento';
+
+  @override
+  String get registroSexo => 'Sexo';
+
+  @override
+  String get registroSexoHombre => 'Hombre';
+
+  @override
+  String get registroSexoMujer => 'Mujer';
+
+  @override
+  String get registroSexoOtro => 'Otro';
+
+  @override
+  String get registroCurp => 'CURP';
+
+  @override
+  String get registroRfc => 'RFC con homoclave';
+
+  @override
+  String get registroNacionalidad => 'Nacionalidad';
+
+  @override
+  String get registroEstadoCivil => 'Estado civil';
+
+  @override
+  String get registroEcSoltero => 'Soltero(a)';
+
+  @override
+  String get registroEcCasado => 'Casado(a)';
+
+  @override
+  String get registroEcDivorciado => 'Divorciado(a)';
+
+  @override
+  String get registroEcViudo => 'Viudo(a)';
+
+  @override
+  String get registroEcUnionLibre => 'Unión libre';
+
+  @override
+  String get registroEcSeparado => 'Separado(a)';
+
+  @override
+  String get registroEcOtro => 'Otro';
+
+  @override
+  String get registroCorreo => 'Correo electrónico';
+
+  @override
+  String get registroCorreoAyuda => 'Será tu usuario para iniciar sesión.';
+
+  @override
+  String get registroTelefono => 'Teléfono móvil';
+
+  @override
+  String get registroTelefonoAlterno => 'Teléfono alternativo';
+
+  @override
+  String get registroCalle => 'Calle';
+
+  @override
+  String get registroNumExt => 'Número exterior';
+
+  @override
+  String get registroNumInt => 'Número interior';
+
+  @override
+  String get registroColonia => 'Colonia';
+
+  @override
+  String get registroCp => 'Código postal';
+
+  @override
+  String get registroMunicipio => 'Municipio o alcaldía';
+
+  @override
+  String get registroEstado => 'Estado';
+
+  @override
+  String get registroPais => 'País';
+
+  @override
+  String get registroOcupacion => 'Ocupación';
+
+  @override
+  String get registroEmpresa => 'Empresa';
+
+  @override
+  String get registroIngreso => 'Ingreso mensual (MXN)';
+
+  @override
+  String get registroContrasenia => 'Contraseña';
+
+  @override
+  String get registroConfirmar => 'Confirmar contraseña';
+
+  @override
+  String get registroPin => 'PIN de compras (4 dígitos)';
+
+  @override
+  String get registroPinAyuda => 'Lo usarás para autorizar cada compra.';
+
+  @override
+  String get registroTipoCuenta => 'Tipo de cuenta';
+
+  @override
+  String get registroTcAhorro => 'Ahorro';
+
+  @override
+  String get registroTcCorriente => 'Corriente';
+
+  @override
+  String get registroTcNomina => 'Nómina';
+
+  @override
+  String get registroTcInversion => 'Inversión';
+
+  @override
+  String get registroReglaLongitud => 'Mínimo 8 caracteres';
+
+  @override
+  String get registroReglaMayuscula => 'Una mayúscula';
+
+  @override
+  String get registroReglaMinuscula => 'Una minúscula';
+
+  @override
+  String get registroReglaNumero => 'Un número';
+
+  @override
+  String get registroReglaEspecial => 'Un carácter especial';
+
+  @override
+  String get registroCuentaInfo =>
+      'Se creará tu cuenta bancaria ACTIVA con el saldo inicial que asigna el sistema y tu usuario de acceso.';
+
+  @override
+  String get registroTerminos =>
+      'Declaro que la información es verídica y acepto el aviso de privacidad.';
+
+  @override
+  String get registroTerminosRequerido =>
+      'Debes aceptar el aviso de privacidad.';
+
+  @override
+  String get registroAnterior => 'Anterior';
+
+  @override
+  String get registroContinuar => 'Continuar';
+
+  @override
+  String get registroEnviar => 'Abrir mi cuenta';
+
+  @override
+  String get registroEditar => 'Editar';
+
+  @override
+  String get registroError => 'No pudimos completar tu registro';
+
+  @override
+  String registroExitoTitulo(String name) {
+    return '¡Bienvenido(a), $name!';
+  }
+
+  @override
+  String get registroExitoMensaje =>
+      'Tu registro se completó y tu cuenta ya está lista.';
+
+  @override
+  String get registroExitoSiguiente =>
+      'Al iniciar sesión activarás la verificación en dos pasos.';
+
+  @override
+  String get registroNumeroCuenta => 'Número de cuenta';
+
+  @override
+  String get registroSaldoInicial => 'Saldo inicial';
+
+  @override
+  String get registroUsuario => 'Usuario de acceso';
+
+  @override
+  String get registroYaTengoCuenta => 'Ya tengo cuenta';
+
+  @override
+  String get campoObligatorio => 'Campo obligatorio';
+
+  @override
+  String get campoNombreInvalido => 'Solo letras y espacios (2 a 50).';
+
+  @override
+  String get campoLongitud => 'Longitud no válida.';
+
+  @override
+  String get campoFechaFutura => 'No puede ser una fecha futura.';
+
+  @override
+  String get campoMenorDeEdad => 'Debes ser mayor de 18 años.';
+
+  @override
+  String get campoCurpInvalida => 'CURP inválida (18 caracteres).';
+
+  @override
+  String get campoRfcInvalido => 'RFC inválido (13 caracteres con homoclave).';
+
+  @override
+  String get campoCurpFecha =>
+      'La fecha de la CURP no coincide con tu fecha de nacimiento.';
+
+  @override
+  String get campoRfcFecha =>
+      'La fecha del RFC no coincide con tu fecha de nacimiento.';
+
+  @override
+  String get campoCorreoInvalido => 'Correo inválido.';
+
+  @override
+  String get campoTelefonoInvalido => 'Debe tener 10 dígitos.';
+
+  @override
+  String get campoCpInvalido => 'Debe tener 5 dígitos.';
+
+  @override
+  String get campoIngresoInvalido =>
+      'Debe ser mayor a cero (máximo 2 decimales).';
+
+  @override
+  String get campoContraseniaDebil => 'La contraseña no cumple los requisitos.';
+
+  @override
+  String get campoContraseniasDistintas => 'Las contraseñas no coinciden.';
+
+  @override
+  String get campoPinInvalido => 'El PIN debe tener 4 dígitos.';
+
+  @override
+  String get campoPinesDistintos => 'Los PIN no coinciden.';
 }
