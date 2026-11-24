@@ -13,3 +13,4 @@ abstract class NotificacionesRepository {
 
   Future<int> marcarTodasLeidas();
 }
+

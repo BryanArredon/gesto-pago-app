@@ -35,3 +35,4 @@ class NotificacionesRepositoryImpl implements NotificacionesRepository {
     return _remote.marcarTodasLeidas();
   }
 }
+

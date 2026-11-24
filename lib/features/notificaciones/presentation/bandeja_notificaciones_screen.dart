@@ -685,3 +685,4 @@ String _formatearFecha(DateTime? fecha) {
     return DateFormat('d MMM, HH:mm').format(local);
   }
 }
+

@@ -1796,13 +1796,52 @@ abstract class AppLocalizations {
   /// **'PINs don\'t match.'**
   String get campoPinesDistintos;
 
+  /// No description provided for @notificacionesTitulo.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
   String get notificacionesTitulo;
+
+  /// No description provided for @notificacionesVacias.
+  ///
+  /// In en, this message translates to:
+  /// **'You have no notifications'**
   String get notificacionesVacias;
+
+  /// No description provided for @notificacionesMarcarTodas.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all'**
   String get notificacionesMarcarTodas;
+
+  /// No description provided for @notificacionesMarcarLeida.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark read'**
   String get notificacionesMarcarLeida;
+
+  /// No description provided for @notificacionesTodas.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
   String get notificacionesTodas;
+
+  /// No description provided for @notificacionesNoLeidas.
+  ///
+  /// In en, this message translates to:
+  /// **'Unread'**
   String get notificacionesNoLeidas;
+
+  /// No description provided for @notificacionesMotivoRechazo.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason for rejection'**
   String get notificacionesMotivoRechazo;
+
+  /// No description provided for @notificacionesEstadoSaldo.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance status'**
   String get notificacionesEstadoSaldo;
 }
 

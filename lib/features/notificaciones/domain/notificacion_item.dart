@@ -233,3 +233,4 @@ class NotificacionesPagina {
   final int pagina;
   final int tamanio;
 }
+
