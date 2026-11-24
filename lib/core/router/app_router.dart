@@ -7,6 +7,7 @@ import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/mfa_screen.dart';
 import '../../features/auth/presentation/splash_screen.dart';
 import '../../features/catalogo/presentation/inicio_screen.dart';
+import '../../features/notificaciones/presentation/bandeja_notificaciones_screen.dart';
 import '../../features/pagos/presentation/comprobante_screen.dart';
 import '../../features/pagos/presentation/historial_screen.dart';
 import '../../features/pagos/presentation/pago_screen.dart';
@@ -85,6 +86,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/comprobante/:id',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => ComprobanteScreen(transaccionId: int.parse(state.pathParameters['id']!)),
+      ),
+      GoRoute(
+        path: '/notificaciones',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const BandejaNotificacionesScreen(),
       ),
     ],
   );

@@ -911,4 +911,28 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get campoPinesDistintos => 'Los PIN no coinciden.';
+
+  @override
+  String get notificacionesTitulo => 'Notificaciones';
+
+  @override
+  String get notificacionesVacias => 'No tienes notificaciones';
+
+  @override
+  String get notificacionesMarcarTodas => 'Marcar todas';
+
+  @override
+  String get notificacionesMarcarLeida => 'Marcar leída';
+
+  @override
+  String get notificacionesTodas => 'Todas';
+
+  @override
+  String get notificacionesNoLeidas => 'No leídas';
+
+  @override
+  String get notificacionesMotivoRechazo => 'Motivo del rechazo';
+
+  @override
+  String get notificacionesEstadoSaldo => 'Estado del saldo';
 }

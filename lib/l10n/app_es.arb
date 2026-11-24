@@ -282,5 +282,13 @@
   "campoContraseniaDebil": "La contraseña no cumple los requisitos.",
   "campoContraseniasDistintas": "Las contraseñas no coinciden.",
   "campoPinInvalido": "El PIN debe tener 4 dígitos.",
-  "campoPinesDistintos": "Los PIN no coinciden."
+  "campoPinesDistintos": "Los PIN no coinciden.",
+  "notificacionesTitulo": "Notificaciones",
+  "notificacionesVacias": "No tienes notificaciones",
+  "notificacionesMarcarTodas": "Marcar todas",
+  "notificacionesMarcarLeida": "Marcar leída",
+  "notificacionesTodas": "Todas",
+  "notificacionesNoLeidas": "No leídas",
+  "notificacionesMotivoRechazo": "Motivo del rechazo",
+  "notificacionesEstadoSaldo": "Estado del saldo"
 }

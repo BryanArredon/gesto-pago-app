@@ -9,6 +9,9 @@ import '../../features/catalogo/data/catalogo_repository_impl.dart';
 import '../../features/catalogo/data/catalogo_remote.dart';
 import '../../features/catalogo/domain/catalogo_repository.dart';
 import '../../features/cuenta/data/cuenta_remote.dart';
+import '../../features/notificaciones/data/notificaciones_remote.dart';
+import '../../features/notificaciones/data/notificaciones_repository_impl.dart';
+import '../../features/notificaciones/domain/notificaciones_repository.dart';
 import '../../features/pagos/data/pagos_repository_impl.dart';
 import '../../features/pagos/data/pagos_remote.dart';
 import '../../features/pagos/domain/pagos_repository.dart';
@@ -72,6 +75,10 @@ final catalogoRepositoryProvider = Provider<CatalogoRepository>((ref) {
 
 final pagosRepositoryProvider = Provider<PagosRepository>((ref) {
   return PagosRepositoryImpl(PagosRemote(ref.watch(apiClientProvider).dio));
+});
+
+final notificacionesRepositoryProvider = Provider<NotificacionesRepository>((ref) {
+  return NotificacionesRepositoryImpl(NotificacionesRemote(ref.watch(apiClientProvider).dio));
 });
 
 /// Preferencia de tema del usuario (system/light/dark). En memoria por ahora.

@@ -1795,6 +1795,15 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'PINs don\'t match.'**
   String get campoPinesDistintos;
+
+  String get notificacionesTitulo;
+  String get notificacionesVacias;
+  String get notificacionesMarcarTodas;
+  String get notificacionesMarcarLeida;
+  String get notificacionesTodas;
+  String get notificacionesNoLeidas;
+  String get notificacionesMotivoRechazo;
+  String get notificacionesEstadoSaldo;
 }
 
 class _AppLocalizationsDelegate

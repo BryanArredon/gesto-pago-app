@@ -909,4 +909,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get campoPinesDistintos => 'PINs don\'t match.';
+
+  @override
+  String get notificacionesTitulo => 'Notifications';
+
+  @override
+  String get notificacionesVacias => 'You have no notifications';
+
+  @override
+  String get notificacionesMarcarTodas => 'Mark all';
+
+  @override
+  String get notificacionesMarcarLeida => 'Mark read';
+
+  @override
+  String get notificacionesTodas => 'All';
+
+  @override
+  String get notificacionesNoLeidas => 'Unread';
+
+  @override
+  String get notificacionesMotivoRechazo => 'Reason for rejection';
+
+  @override
+  String get notificacionesEstadoSaldo => 'Balance status';
 }

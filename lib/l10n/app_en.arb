@@ -334,5 +334,13 @@
   "campoContraseniaDebil": "The password doesn't meet the requirements.",
   "campoContraseniasDistintas": "Passwords don't match.",
   "campoPinInvalido": "The PIN must have 4 digits.",
-  "campoPinesDistintos": "PINs don't match."
+  "campoPinesDistintos": "PINs don't match.",
+  "notificacionesTitulo": "Notifications",
+  "notificacionesVacias": "You have no notifications",
+  "notificacionesMarcarTodas": "Mark all",
+  "notificacionesMarcarLeida": "Mark read",
+  "notificacionesTodas": "All",
+  "notificacionesNoLeidas": "Unread",
+  "notificacionesMotivoRechazo": "Reason for rejection",
+  "notificacionesEstadoSaldo": "Balance status"
 }

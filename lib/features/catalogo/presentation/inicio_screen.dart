@@ -11,6 +11,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../auth/application/session_controller.dart';
 import '../../cuenta/application/cuenta_providers.dart';
 import '../../cuenta/presentation/tarjeta_saldo.dart';
+import '../../notificaciones/application/notificaciones_controller.dart';
 import '../../pagos/application/pago_controller.dart';
 import '../../pagos/domain/transaccion.dart';
 import '../application/catalogo_controller.dart';
@@ -31,6 +32,14 @@ class InicioScreen extends ConsumerStatefulWidget {
 
 class _InicioScreenState extends ConsumerState<InicioScreen> {
   final _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(notificacionesControllerProvider.notifier).actualizarContador();
+    });
+  }
 
   @override
   void dispose() {
@@ -59,8 +68,24 @@ class _InicioScreenState extends ConsumerState<InicioScreen> {
 
     final nombreSesion = sesion.session?.nombre;
     final nombre = (nombreSesion != null && nombreSesion.trim().isNotEmpty) ? nombreSesion : null;
+    final noLeidas = ref.watch(notificacionesNoLeidasProvider);
 
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('GestoPago', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20)),
+        actions: [
+          IconButton(
+            tooltip: 'Notificaciones',
+            icon: Badge(
+              isLabelVisible: noLeidas > 0,
+              label: Text('$noLeidas'),
+              child: const Icon(Icons.notifications_outlined),
+            ),
+            onPressed: () => context.push('/notificaciones'),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -207,6 +232,7 @@ class _ContenidoCatalogoState extends ConsumerState<_ContenidoCatalogo> {
       child: RefreshIndicator(
         onRefresh: () {
           ref.invalidate(cuentaActivaProvider);
+          ref.read(notificacionesControllerProvider.notifier).actualizarContador();
           return ref.read(catalogoControllerProvider.notifier).refresh();
         },
         child: ListView(
