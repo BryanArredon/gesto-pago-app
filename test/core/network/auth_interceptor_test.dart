@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:gesto_pago_app/core/config/app_config.dart';
 import 'package:gesto_pago_app/core/network/api_client.dart';
 import 'package:gesto_pago_app/core/network/app_exception.dart';
 import 'package:gesto_pago_app/core/network/token_refresher.dart';
@@ -150,6 +151,19 @@ void main() {
     final (api, servidor) = cliente({});
 
     await api.dio.post('/cuentas/consulta');
+
+    expect(renovador.llamadas, 0);
+    expect(servidor.peticiones.single.$2, 'Bearer token-actual');
+  });
+
+  test('el sondeo pasivo de sesión no renueva el token aunque esté por expirar', () async {
+    await guardarSesion(expiraEn: const Duration(seconds: 30));
+    final (api, servidor) = cliente({});
+
+    await api.dio.post<void>(
+      '/auth/sesion',
+      options: Options(headers: const {AppConfig.cabeceraConsultaPasiva: 'true'}),
+    );
 
     expect(renovador.llamadas, 0);
     expect(servidor.peticiones.single.$2, 'Bearer token-actual');

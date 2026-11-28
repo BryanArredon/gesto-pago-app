@@ -28,6 +28,18 @@ class AppConfig {
   static const Duration connectTimeout = Duration(seconds: 10);
   static const Duration receiveTimeout = Duration(seconds: 60);
 
+  /// Marca un sondeo automático de sesión: el servidor no lo cuenta como
+  /// actividad y no dispara la renovación del token (que sí cuenta). Sin esto,
+  /// el sondeo mantendría viva para siempre una sesión desatendida.
+  static const String cabeceraConsultaPasiva = 'X-Sesion-Pasiva';
+
+  /// Cada cuánto se comprueba, con la app en primer plano, que la sesión no se
+  /// abrió en la web (una sola sesión vigente entre canales).
+  static const Duration sondeoSesion = Duration(seconds: 15);
+
+  /// Cada cuánto se buscan movimientos nuevos para avisar en el celular.
+  static const Duration sondeoAvisos = Duration(seconds: 20);
+
   /// Margen con el que se renueva el token antes de que expire.
   static const Duration margenRenovacion = Duration(minutes: 2);
 

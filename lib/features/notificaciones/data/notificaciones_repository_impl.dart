@@ -12,11 +12,13 @@ class NotificacionesRepositoryImpl implements NotificacionesRepository {
     int pagina = 0,
     int tamanio = 20,
     bool soloNoLeidas = false,
+    bool pasiva = false,
   }) {
     return _remote.listar(
       pagina: pagina,
       tamanio: tamanio,
       soloNoLeidas: soloNoLeidas,
+      pasiva: pasiva,
     );
   }
 

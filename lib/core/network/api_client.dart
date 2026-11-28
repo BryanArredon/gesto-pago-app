@@ -112,6 +112,8 @@ class AuthInterceptor extends Interceptor {
     if (access != null &&
         expira != null &&
         options.path != '/auth/renovar' &&
+        // Un sondeo pasivo no renueva: renovar cuenta como actividad.
+        !options.headers.containsKey(AppConfig.cabeceraConsultaPasiva) &&
         expira.difference(_reloj()) < AppConfig.margenRenovacion) {
       access = await _renovarUnaVez() ?? access;
     }

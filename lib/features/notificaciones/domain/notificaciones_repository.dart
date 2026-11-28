@@ -5,6 +5,8 @@ abstract class NotificacionesRepository {
     int pagina = 0,
     int tamanio = 20,
     bool soloNoLeidas = false,
+    // Sondeo automático: no cuenta como actividad del usuario (no alarga la sesión).
+    bool pasiva = false,
   });
 
   Future<int> contarNoLeidas();

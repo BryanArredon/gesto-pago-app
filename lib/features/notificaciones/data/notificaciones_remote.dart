@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import '../../../core/config/app_config.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/app_exception.dart';
 import '../domain/notificacion_item.dart';
@@ -14,6 +15,7 @@ class NotificacionesRemote {
     int pagina = 0,
     int tamanio = 20,
     bool soloNoLeidas = false,
+    bool pasiva = false,
   }) async {
     try {
       final response = await _dio.get(
@@ -23,6 +25,7 @@ class NotificacionesRemote {
           'tamanio': tamanio,
           'soloNoLeidas': soloNoLeidas,
         },
+        options: pasiva ? Options(headers: const {AppConfig.cabeceraConsultaPasiva: 'true'}) : null,
       );
       final data = response.data;
       if (data is Map<String, dynamic>) {

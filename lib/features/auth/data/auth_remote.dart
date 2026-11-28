@@ -118,7 +118,10 @@ class AuthRemote {
 
   Future<void> sesion() async {
     try {
-      await _dio.post<void>('/auth/sesion');
+      await _dio.post<void>(
+        '/auth/sesion',
+        options: Options(headers: const {AppConfig.cabeceraConsultaPasiva: 'true'}),
+      );
     } catch (e) {
       throw ApiClient.unwrap(e);
     }

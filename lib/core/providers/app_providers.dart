@@ -20,6 +20,7 @@ import '../config/app_config.dart';
 import '../network/api_client.dart';
 import '../network/token_refresher.dart';
 import '../network/token_store.dart';
+import '../notificaciones/notificador_sistema.dart';
 
 final tokenStoreProvider = Provider<TokenStore>(
   (_) => const TokenStore(
@@ -80,6 +81,10 @@ final pagosRepositoryProvider = Provider<PagosRepository>((ref) {
 final notificacionesRepositoryProvider = Provider<NotificacionesRepository>((ref) {
   return NotificacionesRepositoryImpl(NotificacionesRemote(ref.watch(apiClientProvider).dio));
 });
+
+/// Avisos del sistema operativo. Inactivo por defecto (pruebas y web); `main.dart`
+/// lo sustituye por el nativo en Android e iOS.
+final notificadorSistemaProvider = Provider<NotificadorSistema>((_) => const NotificadorInactivo());
 
 /// Preferencia de tema del usuario (system/light/dark). En memoria por ahora.
 final themeModeProvider = StateProvider<ThemeMode>((_) => ThemeMode.system);

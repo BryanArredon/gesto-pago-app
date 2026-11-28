@@ -4,6 +4,7 @@ import '../../../core/network/app_exception.dart';
 import '../../../core/providers/app_providers.dart';
 import '../domain/notificacion_item.dart';
 import '../domain/notificaciones_repository.dart';
+import 'vigia_notificaciones.dart';
 
 class NotificacionesState {
   const NotificacionesState({
@@ -104,6 +105,13 @@ class NotificacionesController extends StateNotifier<NotificacionesState> {
     }
   }
 
+  /// Fija el contador con un valor ya consultado (p. ej. por el vigía de avisos).
+  void establecerContador(int noLeidas) {
+    if (noLeidas != state.noLeidas) {
+      state = state.copyWith(noLeidas: noLeidas);
+    }
+  }
+
   /// Actualiza únicamente el contador de notificaciones no leídas.
   Future<void> actualizarContador() async {
     try {
@@ -174,6 +182,16 @@ class NotificacionesController extends StateNotifier<NotificacionesState> {
 final notificacionesControllerProvider =
     StateNotifierProvider<NotificacionesController, NotificacionesState>((ref) {
   return NotificacionesController(ref.watch(notificacionesRepositoryProvider));
+});
+
+/// Convierte las notificaciones nuevas del servidor en avisos del celular.
+final vigiaNotificacionesProvider = Provider<VigiaNotificaciones>((ref) {
+  return VigiaNotificaciones(
+    repositorio: ref.watch(notificacionesRepositoryProvider),
+    notificador: ref.watch(notificadorSistemaProvider),
+    alCambiarContador: (n) => ref.read(notificacionesControllerProvider.notifier).establecerContador(n),
+    resumen: (n) => 'Tienes $n avisos nuevos en tu cuenta.',
+  );
 });
 
 final notificacionesNoLeidasProvider = Provider<int>((ref) {
