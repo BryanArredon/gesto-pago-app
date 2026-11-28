@@ -4,104 +4,92 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:gesto_pago_app/core/network/token_refresher.dart';
 import 'package:gesto_pago_app/core/providers/app_providers.dart';
 import 'package:gesto_pago_app/features/auth/application/session_controller.dart';
-import 'package:gesto_pago_app/features/auth/domain/auth_repository.dart';
-import 'package:gesto_pago_app/features/auth/domain/auth_session.dart';
 
-class _FakeAuthRepository implements AuthRepository {
-  _FakeAuthRepository({this.session, this.restoreError});
-
-  final AuthSession? session;
-  final Object? restoreError;
-
-  bool clearCalled = false;
-
-  @override
-  Future<AuthSession?> restoreSession() async {
-    if (restoreError != null) {
-      throw restoreError!;
-    }
-    return session;
-  }
-
-  @override
-  Future<AuthSession> login({required String email, required String password}) {
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<AuthSession> register({
-    required String nombre,
-    required String email,
-    required String password,
-  }) {
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<TokenRefreshResult?> refreshSession(String refreshToken) {
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<void> logout() async {}
-
-  @override
-  Future<void> clearSession() async {
-    clearCalled = true;
-  }
-}
+import '../../support/fakes.dart';
 
 void main() {
-  ProviderContainer containerWith(Object? restoreError, AuthSession? session) {
-    final repo = _FakeAuthRepository(restoreError: restoreError, session: session);
-    final container = ProviderContainer(
-      overrides: [
-        authRepositoryProvider.overrideWithValue(repo),
-      ],
+  (ProviderContainer, FakeAuthRepository) crear({Object? restoreError, Object? logoutError, bool conSesion = false}) {
+    final repo = FakeAuthRepository(
+      session: conSesion ? sesionDePrueba() : null,
+      restoreError: restoreError,
+      logoutError: logoutError,
     );
+    final container = ProviderContainer(overrides: [authRepositoryProvider.overrideWithValue(repo)]);
     addTearDown(container.dispose);
-    return container;
+    return (container, repo);
   }
 
+  SessionController controller(ProviderContainer c) => c.read(sessionControllerProvider.notifier);
+
   test('restore sin sesión persistida -> unauthenticated', () async {
-    final container = containerWith(null, null);
+    final (c, _) = crear();
+    expect(c.read(sessionControllerProvider).status, SessionStatus.unknown);
 
-    expect(container.read(sessionControllerProvider).status, SessionStatus.unknown);
+    await controller(c).restore();
 
-    await container.read(sessionControllerProvider.notifier).restore();
-
-    expect(
-      container.read(sessionControllerProvider).status,
-      SessionStatus.unauthenticated,
-    );
+    expect(c.read(sessionControllerProvider).status, SessionStatus.unauthenticated);
   });
 
   test('restore con sesión persistida -> authenticated', () async {
-    final container = containerWith(
-      null,
-      const AuthSession(
-        email: 'a@b.com',
-        nombre: 'Ana',
-        accessToken: 'tok',
-        refreshToken: 'ref',
-        roles: [],
-      ),
-    );
+    final (c, _) = crear(conSesion: true);
 
-    await container.read(sessionControllerProvider.notifier).restore();
+    await controller(c).restore();
 
-    final state = container.read(sessionControllerProvider);
+    final state = c.read(sessionControllerProvider);
     expect(state.status, SessionStatus.authenticated);
-    expect(state.session?.accessToken, 'tok');
+    expect(state.session?.sesionId, 's-1');
   });
 
   test('restore con fallo del almacenamiento seguro -> unauthenticated y limpia', () async {
-    final container = containerWith(StateError('keystore caído'), null);
+    final (c, repo) = crear(restoreError: StateError('keystore caído'));
 
-    await container.read(sessionControllerProvider.notifier).restore();
+    await controller(c).restore();
 
-    final state = container.read(sessionControllerProvider);
+    expect(c.read(sessionControllerProvider).status, SessionStatus.unauthenticated);
+    expect(repo.clearCalled, isTrue);
+  });
+
+  test('la contraseña sola no autentica: solo el segundo factor abre la sesión', () async {
+    final (c, _) = crear();
+    await controller(c).restore();
+
+    final desafio = await controller(c).iniciarSesion(email: 'ana@e2e.mx', password: 'Segura123!');
+    expect(c.read(sessionControllerProvider).status, SessionStatus.unauthenticated);
+
+    await controller(c).verificarSegundoFactor(desafio: desafio, codigo: '123456', email: 'ana@e2e.mx');
+    expect(c.read(sessionControllerProvider).status, SessionStatus.authenticated);
+  });
+
+  test('sesión revocada desde la web -> unauthenticated con motivo revocada', () async {
+    final (c, repo) = crear(conSesion: true);
+    await controller(c).restore();
+
+    controller(c).onSessionExpired(MotivoCierre.revocada);
+
+    final state = c.read(sessionControllerProvider);
     expect(state.status, SessionStatus.unauthenticated);
-    expect(state.session, isNull);
+    expect(state.motivoCierre, MotivoCierre.revocada);
+    expect(repo.clearCalled, isTrue);
+  });
+
+  test('un aviso de expiración sin sesión activa no cambia el motivo mostrado', () async {
+    final (c, _) = crear(conSesion: true);
+    await controller(c).restore();
+    await controller(c).logout();
+
+    controller(c).onSessionExpired(MotivoCierre.expirada);
+
+    expect(c.read(sessionControllerProvider).motivoCierre, MotivoCierre.manual);
+  });
+
+  test('logout cierra localmente aunque el servidor falle', () async {
+    final (c, repo) = crear(conSesion: true, logoutError: Exception('sin red'));
+    await controller(c).restore();
+
+    await controller(c).logout();
+
+    expect(repo.logoutCalled, isTrue);
+    expect(c.read(sessionControllerProvider).status, SessionStatus.unauthenticated);
+    expect(c.read(sessionControllerProvider).motivoCierre, MotivoCierre.manual);
   });
 }

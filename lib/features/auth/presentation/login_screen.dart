@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,15 +5,21 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/format/message_de_error.dart';
 import '../../../core/network/app_exception.dart';
+import '../../../core/network/token_refresher.dart';
 import '../../../core/theme/gp_assets.dart';
-import '../../../core/theme/gp_colors.dart';
-import '../../../core/theme/gp_theme.dart';
+import '../../../core/widgets/fondo_auth.dart';
 import '../../../core/widgets/password_field.dart';
 import '../../../l10n/app_localizations.dart';
 import '../application/session_controller.dart';
+import 'mfa_screen.dart';
 
+/// Primer paso del inicio de sesión: correo y contraseña. Si son correctos el
+/// servidor emite un desafío y se continúa en [MfaScreen] con el código TOTP.
 class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, this.correoInicial});
+
+  /// Correo precargado (p. ej. al volver del registro).
+  final String? correoInicial;
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -23,7 +27,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  late final _emailController = TextEditingController(text: widget.correoInicial ?? '');
   final _passwordController = TextEditingController();
   bool _cargando = false;
   String? _error;
@@ -35,9 +39,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _iniciarSesion() async {
+  Future<void> _continuar() async {
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    final l = AppLocalizations.of(context);
+    if (_passwordController.text.isEmpty) {
+      setState(() => _error = l.loginPasswordRequired);
       return;
     }
     setState(() {
@@ -45,25 +54,37 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _error = null;
     });
     try {
-      await ref
+      final email = _emailController.text.trim().toLowerCase();
+      final desafio = await ref
           .read(sessionControllerProvider.notifier)
-          .login(email: _emailController.text, password: _passwordController.text);
-      // El router redirigirá a /home al cambiar el estado de sesión.
+          .iniciarSesion(email: email, password: _passwordController.text);
+      if (!mounted) {
+        return;
+      }
+      // La contraseña no se conserva en memoria más de lo necesario.
+      _passwordController.clear();
+      await context.push(
+        '/login/mfa',
+        extra: MfaArgs(desafio: desafio, email: email),
+      );
     } on AppException catch (e) {
       if (!mounted) {
         return;
       }
-      final mensaje =
-          e is UnauthorizedException && e.code == 'AUTH-002'
-              ? AppLocalizations.of(context).loginInvalidCredentials
-              : messageDeError(context, e);
-      setState(() => _error = mensaje);
+      setState(
+        () => _error = switch (e) {
+          UnauthorizedException() => l.loginInvalidCredentials,
+          ForbiddenException() => l.loginUserInactive,
+          LockedException() => l.loginLocked,
+          _ => messageDeError(context, e),
+        },
+      );
     } catch (e, st) {
       if (kDebugMode) {
         debugPrint('Login falló con error inesperado: $e\n$st');
       }
       if (mounted) {
-        setState(() => _error = AppLocalizations.of(context).errorGeneric);
+        setState(() => _error = l.errorGeneric);
       }
     } finally {
       if (mounted) {
@@ -75,159 +96,86 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final oscuro = Theme.of(context).brightness == Brightness.dark;
+    final motivo = ref.watch(sessionControllerProvider.select((s) => s.motivoCierre));
+    final avisoCierre = switch (motivo) {
+      MotivoCierre.revocada => l.loginClosedRevoked,
+      MotivoCierre.expirada => l.loginClosedExpired,
+      MotivoCierre.manual => l.loginClosedManual,
+      null => null,
+    };
     return Scaffold(
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: oscuro
-                      ? [
-                          const Color(0xFF020617),
-                          const Color(0xFF0F172A),
-                          const Color(0xFF1E293B),
-                        ]
-                      : [
-                          const Color(0xFF0F172A),
-                          const Color(0xFF1E3A8A),
-                          const Color(0xFF1D4ED8),
-                        ],
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            top: -60,
-            right: -60,
-            child: Container(
-              width: 240,
-              height: 240,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF38BDF8).withValues(alpha: 0.2),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: -80,
-            left: -80,
-            child: Container(
-              width: 280,
-              height: 280,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF6366F1).withValues(alpha: 0.25),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-          SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 420),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Center(
-                        child: Container(
-                          width: 88,
-                          height: 88,
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(26),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.22),
-                                blurRadius: 28,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
-                          ),
-                          child: Image.asset(
-                            GpAssets.logo,
-                            fit: BoxFit.contain,
-                            errorBuilder: (_, _, _) =>
-                                const Icon(Icons.payments_outlined,
-                                    size: 40, color: Color(0xFF1D4ED8)),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        l.loginTitle,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context)
-                            .textTheme
-                            .displaySmall
-                            ?.copyWith(color: Colors.white),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        l.loginSubtitle,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyLarge
-                            ?.copyWith(color: Colors.white.withValues(alpha: 0.85)),
-                      ),
-                      const SizedBox(height: 30),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(GpRadii.dialogo),
-                        child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
-                          child: Container(
-                            padding: const EdgeInsets.all(GpSpacing.xl),
-                            decoration: BoxDecoration(
-                              color: oscuro
-                                  ? const Color(0xE6161D1A)
-                                  : const Color(0xF2FFFFFF),
-                              borderRadius: BorderRadius.circular(GpRadii.dialogo),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.35),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.14),
-                                  blurRadius: 36,
-                                  offset: const Offset(0, 16),
-                                ),
-                              ],
-                            ),
-                            child: _FormularioLogin(
-                              l: l,
-                              formKey: _formKey,
-                              emailController: _emailController,
-                              passwordController: _passwordController,
-                              cargando: _cargando,
-                              error: _error,
-                              onIniciar: _iniciarSesion,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+      body: FondoAuth(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const LogoAuth(),
+                  const SizedBox(height: 24),
+                  Text(
+                    l.loginTitle,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.displaySmall?.copyWith(color: Colors.white),
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l.loginSubtitle,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(color: Colors.white.withValues(alpha: 0.85)),
+                  ),
+                  const SizedBox(height: 30),
+                  TarjetaAuth(
+                    child: _FormularioLogin(
+                      l: l,
+                      formKey: _formKey,
+                      emailController: _emailController,
+                      passwordController: _passwordController,
+                      cargando: _cargando,
+                      error: _error,
+                      aviso: _error == null ? avisoCierre : null,
+                      avisoEsError: motivo == MotivoCierre.revocada,
+                      onContinuar: _continuar,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-        ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Isotipo de la marca sobre fondo blanco.
+class LogoAuth extends StatelessWidget {
+  const LogoAuth({super.key, this.size = 88});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        width: size,
+        height: size,
+        padding: EdgeInsets.all(size * 0.09),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(size * 0.3),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: 0.22), blurRadius: 28, offset: const Offset(0, 10)),
+          ],
+        ),
+        child: Image.asset(
+          GpAssets.logo,
+          fit: BoxFit.contain,
+          semanticLabel: 'Gesto Pago',
+          errorBuilder: (_, _, _) => const Icon(Icons.payments_outlined, size: 40, color: Color(0xFF1D4ED8)),
+        ),
       ),
     );
   }
@@ -241,7 +189,9 @@ class _FormularioLogin extends StatelessWidget {
     required this.passwordController,
     required this.cargando,
     required this.error,
-    required this.onIniciar,
+    required this.aviso,
+    required this.avisoEsError,
+    required this.onContinuar,
   });
 
   final AppLocalizations l;
@@ -250,109 +200,78 @@ class _FormularioLogin extends StatelessWidget {
   final TextEditingController passwordController;
   final bool cargando;
   final String? error;
-  final VoidCallback onIniciar;
+  final String? aviso;
+  final bool avisoEsError;
+  final VoidCallback onContinuar;
 
   @override
   Widget build(BuildContext context) {
-    return Form(
-      key: formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          TextFormField(
-            controller: emailController,
-            enabled: !cargando,
-            keyboardType: TextInputType.emailAddress,
-            autofillHints: const [AutofillHints.email],
-            autocorrect: false,
-            textInputAction: TextInputAction.next,
-            decoration: InputDecoration(
-              labelText: l.loginEmailLabel,
-              hintText: 'correo@ejemplo.com',
-              prefixIcon: const Icon(Icons.alternate_email),
-            ),
-            validator: (value) {
-              final v = value?.trim() ?? '';
-              if (v.isEmpty) {
-                return l.loginEmailRequired;
-              }
-              if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(v)) {
-                return l.loginEmailInvalid;
-              }
-              return null;
-            },
-            onFieldSubmitted: (_) => cargando ? null : onIniciar(),
-          ),
-          const SizedBox(height: 16),
-          PasswordField(
-            controller: passwordController,
-            label: l.loginPasswordLabel,
-            enabled: !cargando,
-            onSubmitted: (_) => cargando ? null : onIniciar(),
-          ),
-          if (error != null) ...[
-            const SizedBox(height: 16),
-            _ErrorBanner(mensaje: error!),
-          ],
-          const SizedBox(height: 24),
-          FilledButton(
-            onPressed: cargando ? null : onIniciar,
-            child: cargando
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2.4),
-                  )
-                : Text(l.loginButton),
-          ),
-          const SizedBox(height: 16),
-          Wrap(
-            alignment: WrapAlignment.center,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              Text(
-                l.loginNoAccount,
-                style: Theme.of(context).textTheme.bodyMedium,
+    return AutofillGroup(
+      child: Form(
+        key: formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (aviso != null) ...[
+              AvisoBanner(
+                mensaje: aviso!,
+                esError: avisoEsError,
+                icono: avisoEsError ? Icons.devices_other : Icons.check_circle_outline,
               ),
-              TextButton(
-                onPressed: cargando
-                    ? null
-                    : () => context.pushReplacement('/register'),
-                child: Text(l.loginCreateAccount),
-              ),
+              const SizedBox(height: 16),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ErrorBanner extends StatelessWidget {
-  const _ErrorBanner({required this.mensaje});
-
-  final String mensaje;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(GpSpacing.md),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.error.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(GpRadii.campo),
-        border: Border.all(color: Theme.of(context).colorScheme.error.withValues(alpha: 0.4)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.error_outline, color: Theme.of(context).colorScheme.error, size: 20),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              mensaje,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            TextFormField(
+              controller: emailController,
+              enabled: !cargando,
+              keyboardType: TextInputType.emailAddress,
+              autofillHints: const [AutofillHints.username, AutofillHints.email],
+              autocorrect: false,
+              maxLength: 100,
+              buildCounter: (_, {required currentLength, required isFocused, maxLength}) => null,
+              textInputAction: TextInputAction.next,
+              decoration: InputDecoration(
+                labelText: l.loginEmailLabel,
+                hintText: 'correo@ejemplo.com',
+                prefixIcon: const Icon(Icons.alternate_email),
+              ),
+              validator: (value) {
+                final v = value?.trim() ?? '';
+                if (v.isEmpty) {
+                  return l.loginEmailRequired;
+                }
+                if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(v)) {
+                  return l.loginEmailInvalid;
+                }
+                return null;
+              },
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            PasswordField(
+              controller: passwordController,
+              label: l.loginPasswordLabel,
+              enabled: !cargando,
+              autofillHints: const [AutofillHints.password],
+              onSubmitted: (_) => cargando ? null : onContinuar(),
+            ),
+            if (error != null) ...[const SizedBox(height: 16), AvisoBanner(mensaje: error!)],
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed: cargando ? null : onContinuar,
+              child: cargando
+                  ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.4))
+                  : Text(l.loginButton),
+            ),
+            const SizedBox(height: 16),
+            Wrap(
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Text(l.loginNoAccount, style: Theme.of(context).textTheme.bodyMedium),
+                TextButton(onPressed: cargando ? null : () => context.push('/register'), child: Text(l.registroTitle)),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

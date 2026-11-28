@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/app_exception.dart';
 import '../../../core/providers/app_providers.dart';
 import '../../catalogo/domain/catalogo_producto.dart';
+import '../domain/estado_transaccion.dart';
 import '../domain/pagos_repository.dart';
 import '../domain/transaccion.dart';
 
@@ -58,19 +59,11 @@ class PagoController extends Notifier<PagoFlowState> {
   PagosRepository get _repository => ref.read(pagosRepositoryProvider);
 
   /// Verifica la referencia contra el proveedor (monto autoritativo).
-  Future<void> verificarReferencia({
-    required CatalogoProducto producto,
-    required String referencia,
-  }) async {
+  Future<void> verificarReferencia({required CatalogoProducto producto, required String referencia}) async {
     if (state.verificando) {
       return;
     }
-    state = state.copyWith(
-      verificando: true,
-      error: null,
-      clearVerificacion: true,
-      clearTransaccion: true,
-    );
+    state = state.copyWith(verificando: true, error: null, clearVerificacion: true, clearTransaccion: true);
     try {
       final verificacion = await _repository.verificarReferencia(
         idServicio: producto.idServicio,
@@ -83,16 +76,20 @@ class PagoController extends Notifier<PagoFlowState> {
     }
   }
 
-  /// Inicia el pago. Rechaza reenvíos mientras se procesa (anti doble clic).
+  /// Inicia el pago con cargo a [numeroCuenta], autorizado con [pin].
+  /// Rechaza reenvíos mientras se procesa (anti doble clic).
   Future<void> pagar({
     required CatalogoProducto producto,
     required String referencia,
     required String monto,
+    required String numeroCuenta,
+    required String pin,
   }) async {
     if (!state.estaOcupado) {
       state = state.copyWith(procesando: true, error: null, clearTransaccion: true);
     }
     final idempotencyKey = _claveIdempotencia(
+      numeroCuenta,
       producto.idServicio,
       producto.idProducto,
       referencia,
@@ -101,6 +98,8 @@ class PagoController extends Notifier<PagoFlowState> {
     try {
       final transaccion = await _repository.crearTransaccion(
         PagoRequest(
+          numeroCuenta: numeroCuenta,
+          pinAutorizacion: pin,
           idServicio: producto.idServicio,
           idProducto: producto.idProducto,
           referencia: referencia,
@@ -108,6 +107,11 @@ class PagoController extends Notifier<PagoFlowState> {
           idempotencyKey: idempotencyKey,
         ),
       );
+      if (transaccion.estado == EstadoTransaccion.aprobada || transaccion.estado == EstadoTransaccion.fallida) {
+        // Resultado definitivo: una nueva compra idéntica es una intención nueva.
+        _ultimaClave = null;
+        _ultimaIntencion = null;
+      }
       state = state.copyWith(procesando: false, transaccion: transaccion);
     } on AppException catch (e) {
       if (state.procesando) {
@@ -133,29 +137,19 @@ class PagoController extends Notifier<PagoFlowState> {
 
   void reset() => state = const PagoFlowState();
 
-  /// Clave de idempotencia estable para la misma intención de pago:
-  /// same servicio, producto, referencia y monto ⇒ misma clave.
-  /// Si algo cambia, se genera una nueva.
+  /// Clave de idempotencia estable para la misma intención de pago: misma
+  /// cuenta, servicio, producto, referencia y monto ⇒ misma clave, de modo que
+  /// reintentar tras un error de red nunca cobra dos veces. El PIN no forma
+  /// parte de la intención: corregir un PIN equivocado reutiliza la clave.
   String? _ultimaClave;
-  PagoRequest? _ultimoRequest;
+  String? _ultimaIntencion;
 
-  String _claveIdempotencia(int idServicio, int idProducto, String referencia, String monto) {
-    final candidate = PagoRequest(
-      idServicio: idServicio,
-      idProducto: idProducto,
-      referencia: referencia,
-      monto: monto,
-      idempotencyKey: '',
-    );
-    final mismoIntento = _ultimoRequest != null &&
-        _ultimoRequest!.idServicio == idServicio &&
-        _ultimoRequest!.idProducto == idProducto &&
-        _ultimoRequest!.referencia == referencia &&
-        _ultimoRequest!.monto == monto;
-    if (!mismoIntento || _ultimaClave == null) {
+  String _claveIdempotencia(String cuenta, int idServicio, int idProducto, String referencia, String monto) {
+    final intencion = [cuenta, idServicio, idProducto, referencia, monto].join('|');
+    if (intencion != _ultimaIntencion || _ultimaClave == null) {
       _ultimaClave = _generarClave();
     }
-    _ultimoRequest = candidate;
+    _ultimaIntencion = intencion;
     return _ultimaClave!;
   }
 
@@ -169,8 +163,7 @@ class PagoController extends Notifier<PagoFlowState> {
   }
 }
 
-final pagoControllerProvider =
-    NotifierProvider<PagoController, PagoFlowState>(PagoController.new);
+final pagoControllerProvider = NotifierProvider<PagoController, PagoFlowState>(PagoController.new);
 
 class HistorialController extends AsyncNotifier<List<Transaccion>> {
   @override
@@ -184,5 +177,6 @@ class HistorialController extends AsyncNotifier<List<Transaccion>> {
   }
 }
 
-final historialControllerProvider =
-    AsyncNotifierProvider<HistorialController, List<Transaccion>>(HistorialController.new);
+final historialControllerProvider = AsyncNotifierProvider<HistorialController, List<Transaccion>>(
+  HistorialController.new,
+);

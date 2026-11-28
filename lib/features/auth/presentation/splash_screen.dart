@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/gp_assets.dart';
-import '../../../core/theme/gp_colors.dart';
 import '../../auth/application/session_controller.dart';
 import '../../../../l10n/app_localizations.dart';
 
@@ -33,28 +32,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF0F172A),
-              Color(0xFF1E3A8A),
-              Color(0xFF1D4ED8),
-              Color(0xFF2563EB),
-            ],
+            colors: [Color(0xFF0F172A), Color(0xFF1E3A8A), Color(0xFF1D4ED8), Color(0xFF2563EB)],
             stops: [0.0, 0.45, 0.75, 1.0],
           ),
         ),
         child: SafeArea(
           child: Stack(
             children: [
-              Positioned(
-                top: -80,
-                right: -60,
-                child: _Glow(radio: 240, opacidad: 0.10),
-              ),
-              Positioned(
-                bottom: -100,
-                left: -70,
-                child: _Glow(radio: 280, opacidad: 0.08),
-              ),
+              Positioned(top: -80, right: -60, child: _Glow(radio: 240, opacidad: 0.10)),
+              Positioned(bottom: -100, left: -70, child: _Glow(radio: 280, opacidad: 0.08)),
               Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -77,11 +63,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                       child: Image.asset(
                         GpAssets.logo,
                         fit: BoxFit.contain,
-                        errorBuilder: (_, _, _) => const Icon(
-                          Icons.payments_outlined,
-                          size: 56,
-                          color: Color(0xFF1D4ED8),
-                        ),
+                        errorBuilder: (_, _, _) =>
+                            const Icon(Icons.payments_outlined, size: 56, color: Color(0xFF1D4ED8)),
                       ),
                     ),
                     const SizedBox(height: 28),
@@ -97,11 +80,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                     const SizedBox(height: 8),
                     Text(
                       l.splashTagline,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        color: Colors.white70,
-                        fontWeight: FontWeight.w400,
-                      ),
+                      style: const TextStyle(fontSize: 15, color: Colors.white70, fontWeight: FontWeight.w400),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 56),
@@ -115,13 +94,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Text(
-                      l.splashRestoring,
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 13,
-                      ),
-                    ),
+                    Text(l.splashRestoring, style: const TextStyle(color: Colors.white70, fontSize: 13)),
                   ],
                 ),
               ),

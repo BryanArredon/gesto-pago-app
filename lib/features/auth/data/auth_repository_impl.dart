@@ -1,75 +1,111 @@
-import '../../../core/network/token_refresher.dart';
 import '../../../core/network/token_store.dart';
+import '../../../core/utils/jwt.dart';
 import '../domain/auth_repository.dart';
 import '../domain/auth_session.dart';
+import '../domain/desafio_mfa.dart';
 import 'auth_remote.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
-  AuthRepositoryImpl(this._remote, this._tokenStore);
+  AuthRepositoryImpl(this._remote, this._tokenStore, {DateTime Function()? reloj}) : _reloj = reloj ?? DateTime.now;
 
   final AuthRemote _remote;
   final TokenStore _tokenStore;
+  final DateTime Function() _reloj;
+  Future<String?>? _renovacionEnCurso;
 
   @override
-  Future<AuthSession> login({required String email, required String password}) async {
-    final response = await _remote.login(email: email, password: password);
-    final session = response.toSession(email.trim().toLowerCase());
-    await _persistIgnorandoErrores(session);
-    return session;
+  Future<DesafioMfa> iniciarSesion({required String email, required String password}) async {
+    final r = await _remote.login(email: email, password: password);
+    return DesafioMfa(
+      tokenDesafio: r.tokenDesafio,
+      venceEn: _reloj().add(Duration(seconds: r.expiraEnSegundos)),
+      requiereEnrolamiento: r.estado == 'ENROLAMIENTO_REQUERIDO',
+      otpauthUri: r.otpauthUri,
+      secreto: r.secreto,
+    );
   }
 
   @override
-  Future<AuthSession> register({
-    required String nombre,
+  Future<AuthSession> verificarSegundoFactor({
+    required DesafioMfa desafio,
+    required String codigo,
     required String email,
-    required String password,
+    bool cerrarSesionAnterior = false,
   }) async {
-    final response = await _remote.register(
-      nombre: nombre,
-      email: email,
-      password: password,
+    final r = await _remote.verificarMfa(
+      tokenDesafio: desafio.tokenDesafio,
+      codigo: codigo,
+      cerrarSesionAnterior: cerrarSesionAnterior,
     );
-    final session = response.toSession(email.trim().toLowerCase());
+    final correo = (claimsJwt(r.accessToken)['correo'] as String?) ?? email.trim().toLowerCase();
+    final session = AuthSession(
+      email: correo,
+      nombre: '',
+      accessToken: r.accessToken,
+      expiraEn: _expiracion(r),
+      clienteId: r.clienteId,
+      usuarioId: r.usuarioId,
+      sesionId: r.sesionId,
+      rol: r.rol,
+    );
     await _persistIgnorandoErrores(session);
     return session;
   }
 
   @override
   Future<AuthSession?> restoreSession() async {
-    final access = await _tokenStore.readAccessToken();
-    final email = await _tokenStore.readEmail();
-    if (access == null || email == null) {
+    final s = await _tokenStore.read();
+    if (s == null) {
+      // Datos incompletos (p. ej. sesión del esquema anterior): empezar limpio.
+      await _tokenStore.clear();
       return null;
     }
-    final nombre = await _tokenStore.readNombre();
-    final refresh = await _tokenStore.readRefreshToken();
+    if (!s.expiraEn.isAfter(_reloj())) {
+      await _tokenStore.clear();
+      return null;
+    }
     return AuthSession(
-      email: email,
-      nombre: nombre ?? '',
-      accessToken: access,
-      refreshToken: refresh ?? '',
-      roles: const [],
+      email: s.email,
+      nombre: s.nombre,
+      accessToken: s.accessToken,
+      expiraEn: s.expiraEn,
+      clienteId: s.clienteId,
+      usuarioId: s.usuarioId,
+      sesionId: s.sesionId,
+      rol: s.rol,
     );
   }
 
+  /// Una sola renovación concurrente aunque la pidan los dos clientes HTTP.
   @override
-  Future<TokenRefreshResult?> refreshSession(String refreshToken) async {
-    final response = await _remote.refresh(refreshToken: refreshToken);
-    return TokenRefreshResult(
-      accessToken: response.accessToken,
-      refreshToken: response.refreshToken,
-      nombre: response.nombre,
-    );
+  Future<String?> renovarSesion() {
+    final enCurso = _renovacionEnCurso;
+    if (enCurso != null) {
+      return enCurso;
+    }
+    final futuro = _renovar();
+    _renovacionEnCurso = futuro;
+    return futuro.whenComplete(() => _renovacionEnCurso = null);
   }
+
+  Future<String?> _renovar() async {
+    final r = await _remote.renovar();
+    await _tokenStore.actualizarToken(r.accessToken, _expiracion(r));
+    return r.accessToken;
+  }
+
+  @override
+  Future<void> verificarSesionVigente() => _remote.sesion();
 
   @override
   Future<void> logout() async {
     try {
-      final refresh = await _tokenStore.readRefreshToken();
-      if (refresh != null && refresh.isNotEmpty) {
-        await _remote.logout(refreshToken: refresh);
+      if (await _tokenStore.readAccessToken() != null) {
+        await _remote.logout();
       }
     } finally {
+      // Aunque el servidor no responda, el dispositivo olvida la sesión; la de
+      // servidor vence sola por inactividad.
       await _tokenStore.clear();
     }
   }
@@ -77,24 +113,35 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> clearSession() => _tokenStore.clear();
 
-  /// Persiste la sesión; si el almacenamiento seguro falla (p. ej. keystore
-  /// disponible a medias) NO rompe un login/registro ya autorizado por el
-  /// backend: la sesión sigue activa en memoria y se re-persiste en el
-  /// siguiente refresh. Al reiniciar la app el usuario volvería a entrar.
-  Future<void> _persistIgnorandoErrores(AuthSession session) async {
+  @override
+  Future<void> guardarNombre(String nombre) async {
     try {
-      await _persist(session);
+      await _tokenStore.actualizarNombre(nombre);
     } catch (_) {
-      // Se mantiene la sesión en memoria; el interceptor deja tokens al refrescar.
+      // Dato de presentación: no debe romper nada si el keystore falla.
     }
   }
 
-  Future<void> _persist(AuthSession session) {
-    return _tokenStore.save(
-      accessToken: session.accessToken,
-      refreshToken: session.refreshToken,
-      nombre: session.nombre,
-      email: session.email,
-    );
+  DateTime _expiracion(AccesoResponse r) =>
+      expiracionJwt(r.accessToken) ?? _reloj().add(Duration(seconds: r.expiresIn));
+
+  /// Persiste la sesión; si el almacenamiento seguro falla (keystore
+  /// disponible a medias) NO rompe un login ya autorizado por el servidor: la
+  /// sesión sigue activa en memoria. Al reiniciar la app habría que entrar de nuevo.
+  Future<void> _persistIgnorandoErrores(AuthSession session) async {
+    try {
+      await _tokenStore.save(
+        SesionGuardada(
+          accessToken: session.accessToken,
+          expiraEn: session.expiraEn,
+          email: session.email,
+          nombre: session.nombre,
+          clienteId: session.clienteId,
+          usuarioId: session.usuarioId,
+          sesionId: session.sesionId,
+          rol: session.rol,
+        ),
+      );
+    } catch (_) {}
   }
 }

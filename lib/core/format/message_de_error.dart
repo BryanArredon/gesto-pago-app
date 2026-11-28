@@ -11,8 +11,16 @@ String messageDeError(BuildContext context, AppException error) {
       return l.errorNetwork;
     case TimeoutException():
       return l.errorTimeout;
-    case UnauthorizedException():
-      return l.errorUnauthorized;
+    case UnauthorizedException(:final code):
+      // Solo los 401 de sesión significan "sesión expirada"; los de negocio
+      // (PIN incorrecto, código 2FA) tienen su propio mensaje.
+      if (code == 'PAGO-008') {
+        return l.pagoPinInvalid;
+      }
+      if (UnauthorizedException.esPerdidaDeSesion(code)) {
+        return l.errorUnauthorized;
+      }
+      return error.message.trim().isEmpty ? l.errorGeneric : error.message;
     case ForbiddenException():
       return l.errorForbidden;
     case NotFoundException():

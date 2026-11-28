@@ -2,57 +2,72 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import '../../features/auth/application/session_controller.dart';
 import '../../features/auth/data/auth_repository_impl.dart';
 import '../../features/auth/data/auth_remote.dart';
 import '../../features/auth/domain/auth_repository.dart';
 import '../../features/catalogo/data/catalogo_repository_impl.dart';
 import '../../features/catalogo/data/catalogo_remote.dart';
 import '../../features/catalogo/domain/catalogo_repository.dart';
+import '../../features/cuenta/data/cuenta_remote.dart';
+import '../../features/notificaciones/data/notificaciones_remote.dart';
+import '../../features/notificaciones/data/notificaciones_repository_impl.dart';
+import '../../features/notificaciones/domain/notificaciones_repository.dart';
 import '../../features/pagos/data/pagos_repository_impl.dart';
 import '../../features/pagos/data/pagos_remote.dart';
 import '../../features/pagos/domain/pagos_repository.dart';
-import '../../features/persona/data/persona_repository_impl.dart';
-import '../../features/persona/data/persona_remote.dart';
-import '../../features/persona/domain/persona.dart';
+import '../../features/registro/data/registro_remote.dart';
+import '../config/app_config.dart';
 import '../network/api_client.dart';
 import '../network/token_refresher.dart';
 import '../network/token_store.dart';
+import '../notificaciones/notificador_sistema.dart';
 
 final tokenStoreProvider = Provider<TokenStore>(
-  (_) => const TokenStore(FlutterSecureStorage()),
+  (_) => const TokenStore(
+    FlutterSecureStorage(
+      // Keystore de Android con cifrado AES respaldado por hardware.
+      aOptions: AndroidOptions(encryptedSharedPreferences: true),
+      // Solo legible con el dispositivo desbloqueado y nunca en respaldos de iCloud.
+      iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock_this_device),
+    ),
+  ),
 );
 
-/// Puente mutable que entrega el refresher de sesión a [ApiClient] sin crear
+/// Puente mutable que entrega el renovador de sesión a [ApiClient] sin crear
 /// una referencia circular estática entre ApiClient y AuthRepository.
-final tokenRefresherBridgeProvider = Provider<TokenRefresherBridge>(
-  (_) => TokenRefresherBridge(),
-);
+final tokenRefresherBridgeProvider = Provider<TokenRefresherBridge>((_) => TokenRefresherBridge());
 
-/// Puente que entrega a [ApiClient] el aviso de sesión expirada sin depender
-/// del [SessionController] (rompe el ciclo ApiClient -> SessionController ->
+/// Puente que entrega a [ApiClient] el aviso de sesión perdida sin depender
+/// del SessionController (rompe el ciclo ApiClient -> SessionController ->
 /// AuthRepository -> ApiClient).
-final sessionExpiredBridgeProvider = Provider<SessionExpiredBridge>(
-  (_) => SessionExpiredBridge(),
-);
+final sessionExpiredBridgeProvider = Provider<SessionExpiredBridge>((_) => SessionExpiredBridge());
 
-/// Cliente HTTP compartido. El refresher y el aviso de sesión expirada se
-/// resuelven a través de puentes (ver [TokenRefresherBridge] y
-/// [SessionExpiredBridge]) para evitar dependencias circulares.
-final apiClientProvider = Provider<ApiClient>((Ref ref) {
-  final tokenStore = ref.watch(tokenStoreProvider);
-  final bridge = ref.watch(tokenRefresherBridgeProvider);
-  final sessionExpired = ref.watch(sessionExpiredBridgeProvider);
+ApiClient _cliente(Ref ref, String baseUrl) {
   return ApiClient(
-    tokenStore: tokenStore,
-    tokenRefresher: bridge.resolve,
-    onSessionExpired: sessionExpired.resolve,
+    baseUrl: baseUrl,
+    tokenStore: ref.watch(tokenStoreProvider),
+    tokenRefresher: ref.watch(tokenRefresherBridgeProvider).resolve,
+    onSessionExpired: ref.watch(sessionExpiredBridgeProvider).resolve,
   );
-});
+}
+
+/// Cliente HTTP de api-gesto-pago (catálogo y pagos).
+final apiClientProvider = Provider<ApiClient>((ref) => _cliente(ref, AppConfig.apiBaseUrl));
+
+/// Cliente HTTP de onboarding-clientes (identidad, sesiones, cuenta y alta).
+final onboardingClientProvider = Provider<ApiClient>((ref) => _cliente(ref, AppConfig.onboardingBaseUrl));
 
 final authRepositoryProvider = Provider<AuthRepository>((Ref ref) {
-  final client = ref.watch(apiClientProvider);
+  final client = ref.watch(onboardingClientProvider);
   return AuthRepositoryImpl(AuthRemote(client.dio), ref.watch(tokenStoreProvider));
+});
+
+final cuentaRemoteProvider = Provider<CuentaRemote>((ref) {
+  return CuentaRemote(ref.watch(onboardingClientProvider).dio);
+});
+
+final registroRemoteProvider = Provider<RegistroRemote>((ref) {
+  return RegistroRemote(ref.watch(onboardingClientProvider).dio);
 });
 
 final catalogoRepositoryProvider = Provider<CatalogoRepository>((ref) {
@@ -63,9 +78,13 @@ final pagosRepositoryProvider = Provider<PagosRepository>((ref) {
   return PagosRepositoryImpl(PagosRemote(ref.watch(apiClientProvider).dio));
 });
 
-final personaRepositoryProvider = Provider<PersonaRepository>((ref) {
-  return PersonaRepositoryImpl(PersonaRemote(ref.watch(apiClientProvider).dio));
+final notificacionesRepositoryProvider = Provider<NotificacionesRepository>((ref) {
+  return NotificacionesRepositoryImpl(NotificacionesRemote(ref.watch(apiClientProvider).dio));
 });
+
+/// Avisos del sistema operativo. Inactivo por defecto (pruebas y web); `main.dart`
+/// lo sustituye por el nativo en Android e iOS.
+final notificadorSistemaProvider = Provider<NotificadorSistema>((_) => const NotificadorInactivo());
 
 /// Preferencia de tema del usuario (system/light/dark). En memoria por ahora.
 final themeModeProvider = StateProvider<ThemeMode>((_) => ThemeMode.system);

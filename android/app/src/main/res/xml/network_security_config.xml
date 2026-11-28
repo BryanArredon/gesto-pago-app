@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Release (MASVS-NETWORK): solo HTTPS y solo autoridades del sistema. Las CA instaladas
+     por el usuario no son de confianza, lo que impide interceptar el tráfico con un proxy.
+     El certificate pinning adicional se configura con dart-define CERT_PINS. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
