@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/format/gp_money.dart';
 import '../../../core/theme/gp_theme.dart';
 import '../../../core/widgets/app_empty_view.dart';
 import '../../../core/widgets/app_error_view.dart';
@@ -13,6 +14,7 @@ import '../../cuenta/application/cuenta_providers.dart';
 import '../../cuenta/presentation/tarjeta_saldo.dart';
 import '../../notificaciones/application/notificaciones_controller.dart';
 import '../../pagos/application/pago_controller.dart';
+import '../../pagos/domain/compras_frecuentes.dart';
 import '../../pagos/domain/transaccion.dart';
 import '../application/catalogo_controller.dart';
 import '../domain/catalogo_producto.dart';
@@ -227,6 +229,7 @@ class _ContenidoCatalogoState extends ConsumerState<_ContenidoCatalogo> {
     final frecuentes = productosFrecuentes(widget.productos);
     final historial = ref.watch(historialControllerProvider);
     final ultimasTransacciones = historial.value?.where((t) => t.esAprobada).take(3).toList() ?? [];
+    final paraRepetir = comprasParaRepetir(historial.value ?? const []);
 
     return Expanded(
       child: RefreshIndicator(
@@ -240,6 +243,30 @@ class _ContenidoCatalogoState extends ConsumerState<_ContenidoCatalogo> {
           padding: const EdgeInsets.only(bottom: 28),
           children: [
             const Padding(padding: EdgeInsets.fromLTRB(GpSpacing.page, 4, GpSpacing.page, 8), child: TarjetaSaldo()),
+            // Repetir una compra: la recarga o pago de siempre en dos toques (tocar + PIN).
+            if (paraRepetir.isNotEmpty) ...[
+              _EncabezadoSeccion(titulo: l.inicioRepetirCompra),
+              SizedBox(
+                height: 132,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: GpSpacing.page),
+                  itemCount: paraRepetir.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 10),
+                  itemBuilder: (context, i) {
+                    final tx = paraRepetir[i];
+                    return _TarjetaRepetir(
+                      transaccion: tx,
+                      onTap: () => context.push(
+                        '/pago/${tx.idServicio}/${tx.idProducto}',
+                        extra: RepeticionPago(referencia: tx.referencia),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 4),
+            ],
             // Categorías de servicios (Grid visual)
             _EncabezadoSeccion(titulo: 'Categorías de servicios'),
             Padding(
@@ -402,6 +429,74 @@ class _GridCategorias extends StatelessWidget {
 }
 
 /// Tarjeta limpia para los últimos pagos en la pantalla principal
+/// Tarjeta compacta para repetir una compra: marca, producto, a quién y cuánto.
+class _TarjetaRepetir extends StatelessWidget {
+  const _TarjetaRepetir({required this.transaccion, required this.onTap});
+
+  final Transaccion transaccion;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final texto = Theme.of(context).textTheme;
+    return Semantics(
+      button: true,
+      label: l.inicioRepetirSemantica(transaccion.producto, transaccion.referencia, GpMoney.format(transaccion.monto)),
+      excludeSemantics: true,
+      child: Material(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(GpRadii.tarjeta),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(GpRadii.tarjeta),
+          child: Container(
+            width: 168,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(GpRadii.tarjeta),
+              border: Border.all(color: scheme.outline),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    BrandMark(servicio: transaccion.servicio, tamano: 36, radio: 11),
+                    const Spacer(),
+                    Icon(Icons.replay_rounded, size: 20, color: scheme.primary),
+                  ],
+                ),
+                const Spacer(),
+                Text(
+                  transaccion.producto,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: texto.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                Text(
+                  referenciaCorta(transaccion.referencia),
+                  style: texto.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  GpMoney.format(transaccion.monto),
+                  style: texto.titleSmall?.copyWith(
+                    color: scheme.primary,
+                    fontWeight: FontWeight.w800,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _TarjetaPagoReciente extends StatelessWidget {
   const _TarjetaPagoReciente({required this.transaccion, required this.onTap});
 

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/format/gp_money.dart';
 import '../../../core/theme/gp_theme.dart';
+import '../../../core/widgets/esqueleto.dart';
 import '../../../l10n/app_localizations.dart';
 import '../application/cuenta_providers.dart';
 
@@ -35,9 +36,22 @@ class TarjetaSaldo extends ConsumerWidget {
         ],
       ),
       child: cuenta.when(
-        loading: () => const SizedBox(
+        loading: () => SizedBox(
           height: 110,
-          child: Center(child: CircularProgressIndicator(color: Colors.white)),
+          child: Semantics(
+            label: l.commonLoading,
+            child: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Esqueleto(ancho: 110, alto: 12, color: Colors.white24),
+                SizedBox(height: 12),
+                Esqueleto(ancho: 190, alto: 30, color: Colors.white24),
+                SizedBox(height: 14),
+                Esqueleto(ancho: 150, alto: 14, color: Colors.white24),
+              ],
+            ),
+          ),
         ),
         error: (_, _) => SizedBox(
           height: 110,

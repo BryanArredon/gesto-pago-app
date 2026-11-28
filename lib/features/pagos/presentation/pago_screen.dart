@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -7,6 +10,7 @@ import '../../../core/format/message_de_error.dart';
 import '../../../core/theme/gp_colors.dart';
 import '../../../core/theme/gp_theme.dart';
 import '../../../core/widgets/brand_mark.dart';
+import '../../../core/widgets/esqueleto.dart';
 import '../../../core/widgets/money_text.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../catalogo/application/catalogo_controller.dart';
@@ -18,17 +22,20 @@ import '../application/pago_controller.dart';
 
 /// Captura los datos del pago, verifica contra el proveedor y lo ejecuta.
 class PagoScreen extends ConsumerStatefulWidget {
-  const PagoScreen({super.key, required this.idServicio, required this.idProducto});
+  const PagoScreen({super.key, required this.idServicio, required this.idProducto, this.referenciaInicial});
 
   final int idServicio;
   final int idProducto;
+
+  /// Referencia precargada al repetir una compra anterior.
+  final String? referenciaInicial;
 
   @override
   ConsumerState<PagoScreen> createState() => _PagoScreenState();
 }
 
 class _PagoScreenState extends ConsumerState<PagoScreen> {
-  final _referenciaController = TextEditingController();
+  late final _referenciaController = TextEditingController(text: widget.referenciaInicial ?? '');
   final _montoController = TextEditingController();
 
   @override
@@ -94,6 +101,16 @@ class _PagoScreenState extends ConsumerState<PagoScreen> {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.pagoNoAccount)));
       return;
     }
+    // Se avisa antes de pedir el PIN: no tiene sentido autorizar un cargo que el banco rechazará.
+    final saldo = double.tryParse(cuenta.saldo) ?? 0;
+    final importe = double.parse(monto);
+    if (importe > saldo) {
+      unawaited(HapticFeedback.heavyImpact());
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l.pagoSaldoInsuficiente(GpMoney.format(cuenta.saldo), GpMoney.format(monto)))),
+      );
+      return;
+    }
 
     final confirmado = await showDialog<bool>(
       context: context,
@@ -108,6 +125,16 @@ class _PagoScreenState extends ConsumerState<PagoScreen> {
             _Fila(label: l.pagoConfirmService, valor: producto.servicio),
             _Fila(label: l.pagoConfirmReference, valor: referencia),
             _Fila(label: l.pagoConfirmAmount, valor: GpMoney.format(monto)),
+            _Fila(label: l.pagoSaldoDespues, valor: GpMoney.format((saldo - importe).toStringAsFixed(2))),
+            const SizedBox(height: 12),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.shield_outlined, size: 16, color: Theme.of(dialogContext).colorScheme.primary),
+                const SizedBox(width: 6),
+                Expanded(child: Text(l.pagoSinCancelacion, style: Theme.of(dialogContext).textTheme.bodySmall)),
+              ],
+            ),
           ],
         ),
         actions: [
@@ -137,6 +164,13 @@ class _PagoScreenState extends ConsumerState<PagoScreen> {
       Navigator.of(context).pop();
     }
     final estado = ref.read(pagoControllerProvider);
+    final tx = estado.transaccion;
+    // Confirmación táctil del resultado, como en las apps bancarias: éxito suave, otro desenlace fuerte.
+    if (tx != null) {
+      unawaited(tx.esAprobada ? HapticFeedback.mediumImpact() : HapticFeedback.heavyImpact());
+    } else if (estado.error != null) {
+      unawaited(HapticFeedback.heavyImpact());
+    }
     if (estado.transaccion != null && mounted) {
       // El saldo cambió: la tarjeta de inicio debe recargarse.
       ref.invalidate(cuentaActivaProvider);
@@ -154,7 +188,16 @@ class _PagoScreenState extends ConsumerState<PagoScreen> {
     if (catalogo.isLoading) {
       return Scaffold(
         appBar: AppBar(title: Text(l.pagoConfirmTitle)),
-        body: const Center(child: CircularProgressIndicator()),
+        body: ListView(
+          padding: const EdgeInsets.all(GpSpacing.page),
+          children: const [
+            Esqueleto(alto: 120, radio: 20),
+            SizedBox(height: 16),
+            Esqueleto(alto: 64, radio: 20),
+            SizedBox(height: 24),
+            Esqueleto(alto: 56, radio: 14),
+          ],
+        ),
       );
     }
     if (producto == null) {
@@ -194,9 +237,11 @@ class _PagoScreenState extends ConsumerState<PagoScreen> {
                 controller: _montoController,
                 enabled: !estado.estaOcupado,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: const [MontoInputFormatter()],
                 decoration: InputDecoration(
                   labelText: l.pagoAmountLabel,
                   hintText: l.pagoAmountHint,
+                  helperText: l.pagoMontoAyuda,
                   prefixText: r'$ ',
                 ),
               ),

@@ -935,4 +935,82 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get notificacionesEstadoSaldo => 'Estado del saldo';
+
+  @override
+  String get historialResumenCompras => 'Compras';
+
+  @override
+  String get historialResumenTotal => 'Total pagado';
+
+  @override
+  String get historialSoloExitosas =>
+      'Compras confirmadas como exitosas por Gesto Pago.';
+
+  @override
+  String pagoSaldoInsuficiente(String saldo, String monto) {
+    return 'Tu saldo disponible ($saldo) no cubre este pago de $monto.';
+  }
+
+  @override
+  String get pagoSaldoDespues => 'Saldo después del pago';
+
+  @override
+  String get pagoSinCancelacion =>
+      'Una vez autorizado con tu PIN, el pago no se puede cancelar.';
+
+  @override
+  String get pagoMontoAyuda => 'Hasta 2 decimales.';
+
+  @override
+  String get inicioRepetirCompra => 'Repetir una compra';
+
+  @override
+  String inicioRepetirSemantica(
+    String producto,
+    String referencia,
+    String monto,
+  ) {
+    return 'Repetir $producto para $referencia por $monto';
+  }
+
+  @override
+  String get comprobanteCompartir => 'Compartir comprobante';
+
+  @override
+  String get comprobanteCompartirImagen => 'Como imagen';
+
+  @override
+  String get comprobanteCompartirImagenDetalle => 'Ideal para WhatsApp o redes';
+
+  @override
+  String get comprobanteCompartirPdf => 'Como PDF';
+
+  @override
+  String get comprobanteCompartirPdfDetalle =>
+      'Documento formal para imprimir o enviar por correo';
+
+  @override
+  String get comprobanteCompartirError =>
+      'No se pudo generar el comprobante. Inténtalo de nuevo.';
+
+  @override
+  String get comprobanteDocumento => 'Comprobante de compra';
+
+  @override
+  String get comprobanteGenerado => 'Comprobante generado por Gesto Pago';
+
+  @override
+  String get comprobanteFolio => 'Folio';
+
+  @override
+  String get comprobanteServicio => 'Servicio';
+
+  @override
+  String get comprobanteProducto => 'Producto';
+
+  @override
+  String get comprobanteComision => 'Comisión';
+
+  @override
+  String get comprobanteTotal => 'Total';
 }

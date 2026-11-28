@@ -10,6 +10,7 @@ import '../../features/catalogo/presentation/inicio_screen.dart';
 import '../../features/notificaciones/presentation/bandeja_notificaciones_screen.dart';
 import '../../features/pagos/presentation/comprobante_screen.dart';
 import '../../features/pagos/presentation/historial_screen.dart';
+import '../../features/pagos/domain/compras_frecuentes.dart';
 import '../../features/pagos/presentation/pago_screen.dart';
 import '../../features/perfil/presentation/perfil_screen.dart';
 import '../../features/registro/presentation/registro_screen.dart';
@@ -79,7 +80,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final idServicio = int.parse(state.pathParameters['idServicio']!);
           final idProducto = int.parse(state.pathParameters['idProducto']!);
-          return PagoScreen(idServicio: idServicio, idProducto: idProducto);
+          // "Repetir compra" llega con la referencia por `extra` (no en la URL: es un dato personal).
+          final repeticion = state.extra is RepeticionPago ? state.extra! as RepeticionPago : null;
+          return PagoScreen(idServicio: idServicio, idProducto: idProducto, referenciaInicial: repeticion?.referencia);
         },
       ),
       GoRoute(
